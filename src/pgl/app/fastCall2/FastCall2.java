@@ -19,12 +19,12 @@ public class FastCall2 {
     static int scanBinSize = 5000000;
     // maximum of the number of alternative alleles
     static int maxAltNum = 2;
-    static int maxIndelLength = 63;
+    static int maxIndelLength = 63; // 就是一个long的长度
     //A, C, G, T, -, +
-    static final byte[] pileupAlleleAscIIs = {65, 67, 71, 84, 45, 43};
+    static final byte[] pileupAlleleAscIIs = {65, 67, 71, 84, 45, 43};  // only map this 5?
 
     static final HashByteByteMap pileupAscIIToAlleleCodingMap =
-            HashByteByteMaps.getDefaultFactory().withDefaultValue((byte)-1).newImmutableMap(pileupAlleleAscIIs, AlleleEncoder.alleleCodings);
+            HashByteByteMaps.getDefaultFactory().withDefaultValue((byte)-1).newImmutableMap(pileupAlleleAscIIs, AlleleEncoder.alleleCodings);   // what class withDefaultValue((byte)-1) returns?
 
     public FastCall2 (String[] args) {
         long timeStart = System.nanoTime();

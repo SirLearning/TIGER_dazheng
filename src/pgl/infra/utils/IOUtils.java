@@ -101,7 +101,7 @@ public class IOUtils {
     public static BufferedReader getTextReader (String infileS) {
         BufferedReader br = null;
         try {
-            br = new BufferedReader (new FileReader(infileS), 65536);
+            br = new BufferedReader (new FileReader(infileS), 65536);   // 测试过，看哪个快哪个慢，缓存设多大最快
         }
         catch (Exception e) {
             e.printStackTrace();

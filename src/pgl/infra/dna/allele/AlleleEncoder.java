@@ -31,7 +31,7 @@ public class AlleleEncoder {
     /**
      * Alleles in coding values.
      */
-    public static final byte[] alleleCodings = {0, 1, 2, 3, 4, 5};
+    public static final byte[] alleleCodings = {0, 1, 2, 3, 4, 5};  // 可以通过和交并的位操作，来对碱基进行操作
 
     /**
      * The default coding value of allele missing.

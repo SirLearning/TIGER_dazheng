@@ -146,7 +146,7 @@ public class FastaBit extends FastaAbstract {
                 fr = new FastaRecordBit(description, seq, cnt);
                 fl.add(fr);
             }
-            records = fl.toArray(new FastaRecordBit[fl.size()]);
+            records = fl.toArray(new FastaRecordBit[fl.size()]);    // An array should define length first, while List is synamic.
             sType = sortType.byID;
             System.out.println(records.length + " sequences in the file " + infileS);
         }

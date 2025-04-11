@@ -101,7 +101,7 @@ class DiscoverVariation extends AppAbstract {
 
     @Override
     public void retrieveAppParameters(String[] args) {
-        CommandLineParser parser = new DefaultParser();
+        CommandLineParser parser = new DefaultParser(); // from package org.apache.commons.cli
         try {
             CommandLine line = parser.parse(options, args);
             String inOpt = null;
@@ -165,7 +165,7 @@ class DiscoverVariation extends AppAbstract {
             long start = System.nanoTime();
             System.out.println("Reading reference genome from "+ referenceFileS);
             FastaBit genomeFa = new FastaBit(referenceFileS);
-            System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
+            System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s"); // Benchmark class contains methods to count running time.
             int chromIndex = genomeFa.getIndexByDescription(String.valueOf(this.chrom));
             if (tem.length == 1) {
                 this.regionStart = 1;
@@ -213,8 +213,8 @@ class DiscoverVariation extends AppAbstract {
         int[][] binBound = d.getFirstElement();
         int[] binStarts = d.getSecondElement();
         try {
-            LongAdder counter = new LongAdder();
-            ExecutorService pool = Executors.newFixedThreadPool(this.threadsNum);
+            LongAdder counter = new LongAdder();    // multi-threads computation counter. 原子计数器，一般线程没法计数，是LongAdder这个类可以跨越多线程
+            ExecutorService pool = Executors.newFixedThreadPool(this.threadsNum);   // 要debug只能将线程数设为1
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < taxaNames.length; i++) {
                 String[] bamFiles = this.taxaBamPathMap.get(taxaNames[i]);
@@ -229,7 +229,7 @@ class DiscoverVariation extends AppAbstract {
                 TaxonCall tc = new TaxonCall(command, binBound, binStarts, taxaNames[i], taxaOutDirs[i], counter);
                 Future<TaxonCall> f = pool.submit(tc);
             }
-            pool.shutdown();
+            pool.shutdown();    // the whole function?
             pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
         }
         catch (Exception e) {
@@ -303,13 +303,13 @@ class DiscoverVariation extends AppAbstract {
             if (siteDepthRatio < mindrThresh) return false;
             if (siteDepthRatio > maxdrTrresh) return false;
 //            FastCall2.removeFirstPositionSign(baseSb);
-            String baseS = baseSb.toString().toUpperCase();
+            String baseS = baseSb.toString().toUpperCase(); // why to upper case? the forward and backword alignment is not important?
             byte[] baseB = baseS.getBytes();
             this.initialize2();
             int index = 0;
             int vCnt = 0;
             for (int i = 0; i < baseB.length; i++) {
-                byte alleleCoding = FastCall2.pileupAscIIToAlleleCodingMap.get(baseB[i]);
+                byte alleleCoding = FastCall2.pileupAscIIToAlleleCodingMap.get(baseB[i]);   // how it works?
                 index = Arrays.binarySearch(AlleleEncoder.alleleCodings, alleleCoding);
                 if (index < 0) continue;
                 if (index > 3) {
@@ -317,7 +317,7 @@ class DiscoverVariation extends AppAbstract {
                     int endIndex = i+2;
                     for (int j = i+2; j < baseB.length; j++) {
                         if (baseB[j] > 57) {
-                            endIndex = j;
+                            endIndex = j;   // what is the meaning?
                             break;
                         }
                     }
@@ -333,17 +333,17 @@ class DiscoverVariation extends AppAbstract {
                     i+=length;
                 }
                 alleleCount[index]++;
-                vCnt++;
+                vCnt++; // variation的种类，太高就不要了
             }
             if (vCnt == 0) return false;
             if (insertionLengthSet.size()+deletionLengthSet.size() > indelTypeThresh) return false;
-            int[] alleleCountDesendingIndex = PArrayUtils.getIndicesByDescendingValue(alleleCount);
-            double alleleDepthRatio = (double)alleleCount[alleleCountDesendingIndex[0]]/currentDepth;
+            int[] alleleCountDesendingIndex = PArrayUtils.getIndicesByDescendingValue(alleleCount); // why compare? to find the variant base? 二倍体，杂合的可能，可能有两种碱基，应该是1:1, 1:0, 0:1这三种情况
+            double alleleDepthRatio = (double)alleleCount[alleleCountDesendingIndex[0]]/currentDepth;   // the highest depth one?
             if (alleleDepthRatio < herThresh) return false;
-            else if (alleleDepthRatio > 1 - herThresh && alleleDepthRatio < horThresh) return false;
+            else if (alleleDepthRatio > 1 - herThresh && alleleDepthRatio < horThresh) return false;    // heterozygous & homozygous check, 0是reference allele，1是另外一种
             if (alleleCount[alleleCountDesendingIndex[1]] != 0) {
                 alleleDepthRatio = (double)alleleCount[alleleCountDesendingIndex[1]]/currentDepth;
-                if (alleleDepthRatio > tdrTresh) return false;
+                if (alleleDepthRatio > tdrTresh) return false;  // why second? 一个位点一般是不会反复突变，一个0.3，一个0.7
             }
             ifWrite = true;
             this.altAllele = AlleleEncoder.alleleCodings[alleleCountDesendingIndex[0]];
@@ -360,7 +360,7 @@ class DiscoverVariation extends AppAbstract {
         public void closeDos () {
             if (currentBinIndex < 0) return;
             try {
-                dos.writeInt(Integer.MIN_VALUE);
+                dos.writeInt(Integer.MIN_VALUE);    // write iteratively with bits
                 dos.flush();
                 dos.close();
             }
@@ -371,14 +371,14 @@ class DiscoverVariation extends AppAbstract {
         }
 
         public void setDos () {
-            int binIndex = Arrays.binarySearch(binStarts, this.currentPos);
-            if (binIndex < 0) binIndex = -binIndex-2;
+            int binIndex = Arrays.binarySearch(binStarts, this.currentPos); // bin的size固定，但是读取出的samtools mpileup并不是每个位点都输出，让每个并行处理的文件都对上
+            if (binIndex < 0) binIndex = -binIndex-2;   // what is the meaning? (low-1) 二分搜索，要先排序，然后返回 (-low-1)
             if (binIndex != currentBinIndex) {
-                if (currentBinIndex > -1) {
+                if (currentBinIndex > -1) { // check if there is the end of file?
                     this.closeDos();
                 }
                 StringBuilder sb = new StringBuilder();
-                sb.append(chrom).append("_").append(binBound[binIndex][0]).append("_").append(binBound[binIndex][1]).append(".ing.gz");
+                sb.append(chrom).append("_").append(binBound[binIndex][0]).append("_").append(binBound[binIndex][1]).append(".ing.gz"); // output ".ing.gz" file for every bin.
                 String outfileS = new File (outDir, sb.toString()).getAbsolutePath();
 //                System.out.println(outfileS);
                 dos = IOUtils.getBinaryGzipWriter(outfileS);
@@ -397,11 +397,11 @@ class DiscoverVariation extends AppAbstract {
         }
 
         public void writeVariants () {
-            this.setDos();
+            this.setDos();  // where setting write?
             try {
-                int[] allelePack = AllelePackage.getAllelePack(binStarts[currentBinIndex], currentPos, altAllele, indelLength, indelSeq);
+                int[] allelePack = AllelePackage.getAllelePack(binStarts[currentBinIndex], currentPos, altAllele, indelLength, indelSeq);   // turn all data to int?
                 for (int i = 0; i < allelePack.length; i++) {
-                    dos.writeInt(allelePack[i]);
+                    dos.writeInt(allelePack[i]);    // how to distinguish different lines?
                 }
             }
             catch (Exception e) {
@@ -413,17 +413,17 @@ class DiscoverVariation extends AppAbstract {
         @Override
         public TaxonCall call() throws Exception {
             try {
-                Runtime rt = Runtime.getRuntime();
+                Runtime rt = Runtime.getRuntime();  // 外部环境，将程序交给操作系统
                 Process p = rt.exec(command);
                 String temp = null;
-                BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));  // 直接在内存中传输数据
                 while ((temp = br.readLine()) != null) {
                     if(!this.processPileupLine(temp)) continue;
-                    this.writeVariants();
+                    this.writeVariants();   // how to use pool to output?
                 }
                 this.closeDos();
                 br.close();
-                p.waitFor();
+                p.waitFor();    // what is the use?
                 System.out.println("Individual genotype is completed for taxon "+ this.taxon);
             }
             catch (Exception e) {
@@ -431,7 +431,7 @@ class DiscoverVariation extends AppAbstract {
                 e.printStackTrace();
                 System.exit(1);
             }
-            counter.increment();
+            counter.increment();    // how to use? is there a template?
             int count = counter.intValue();
             if (count%50 == 0) {
                 System.out.println("Variation calling has been performed for "+ String.valueOf(count)+ " taxa.");

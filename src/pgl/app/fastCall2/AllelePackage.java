@@ -108,8 +108,8 @@ class AllelePackage implements Comparable<AllelePackage>{
     static int[] getAllelePack (int binStart, int position, byte alleleCoding, int indelLength, String indelSeq) {
         int v = (position-binStart) << 9;
         v = v + (alleleCoding << 6);
-        if (indelLength > FastCall2.maxIndelLength) indelLength = FastCall2.maxIndelLength;
-        v = v+indelLength;
+        if (indelLength > FastCall2.maxIndelLength) indelLength = FastCall2.maxIndelLength; // losing data? 有其他的方式，如三代测序，二代测序不准确，不如不记录
+        v = v+indelLength;  // compress: position, alleleCoding, indelLength
         int[] allelePack = new int[getAllelePackSizeFromIndelLength(indelLength)];
         allelePack[0] = v;
         if (allelePack.length ==1) return allelePack;
@@ -135,10 +135,10 @@ class AllelePackage implements Comparable<AllelePackage>{
     static int getAllelePackSizeFromIndelLength(int indelLength) {
         int remainder = indelLength % BaseEncoder.intChunkSize;
         if (remainder == 0) {
-            return indelLength/BaseEncoder.intChunkSize+1;
+            return indelLength/BaseEncoder.intChunkSize+1;  // 1 is for "v"
         }
         else {
-            return indelLength/BaseEncoder.intChunkSize+2;
+            return indelLength/BaseEncoder.intChunkSize+2;  // why "+2"? for the remainder (which < 16)
         }
     }
 

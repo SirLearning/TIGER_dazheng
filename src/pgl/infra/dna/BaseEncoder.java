@@ -220,12 +220,12 @@ public class BaseEncoder {
         int length = endIndex - startIndex;
         int v = 0;
         if (length > intChunkSize) {
-            return -1;
+            return -1;  // how to figure out the problem?
         }
         for (int i = startIndex; i < endIndex; i++) {
             v = (v << 2) + a[i];
         }
-        v = (v << (2*(intChunkSize-length)));
+        v = (v << (2*(intChunkSize-length)));   // feed up the empty left
         return v;
     }
     
