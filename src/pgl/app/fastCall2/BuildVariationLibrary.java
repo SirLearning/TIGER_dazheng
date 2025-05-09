@@ -155,7 +155,7 @@ class BuildVariationLibrary extends AppAbstract {
                 System.exit(1);
             }
             VariationLibrary vl = new VariationLibrary (ingList, maoThresh, FastCall2.maxAltNum, chrom, binStarts[i]);  // why build variationLibrary here?
-            vlList.add(vl);
+            vlList.add(vl); // test
         }
         VariationLibrary chromVl = VariationLibrary.getInstance(vlList);
         File f = new File (vLibDirS);
