@@ -56,28 +56,28 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
     private void mergeIngs (List<IndividualGenotype> ingList, int maoThresh, int maxAltNum) {
         IntOpenHashSet positionSet = new IntOpenHashSet();
         for (int i = 0; i < ingList.size(); i++) {
-            int positionNumber = ingList.get(i).getPositionNumber();
+            int positionNumber = ingList.get(i).getPositionNumber();    // what is this?
             for (int j = 0; j < positionNumber; j++) {
-                positionSet.add(ingList.get(i).getAlleleChromPosition(j));
+                positionSet.add(ingList.get(i).getAlleleChromPosition(j));  // what if it is repeat? what if the allele is between samples?
             }
 
         }
-        potentialPositions = positionSet.toIntArray();
+        potentialPositions = positionSet.toIntArray();  // allele positions
         Arrays.sort(potentialPositions);
-        potentialAllelePackLists = new ArrayList[potentialPositions.length];
+        potentialAllelePackLists = new ArrayList[potentialPositions.length];    // is based on position
         for (int i = 0; i < potentialPositions.length; i++) {
-            potentialAllelePackLists[i] = new ArrayList<>();
+            potentialAllelePackLists[i] = new ArrayList<>();    // why ArrayList? what is the use of ArrayList? is it the parent of every List class?
         }
         for (int i = 0; i < ingList.size(); i++) {
             int positionNum = ingList.get(i).getPositionNumber();
             int currentIndex = Integer.MIN_VALUE;
             for (int j = 0; j < positionNum; j++) {
-                currentIndex = Arrays.binarySearch(potentialPositions, ingList.get(i).getAlleleChromPosition(j));
+                currentIndex = Arrays.binarySearch(potentialPositions, ingList.get(i).getAlleleChromPosition(j));   // circle of i & j
                 potentialAllelePackLists[currentIndex].add(new AllelePackage(ingList.get(i).getAllelePack(j)));
             }
         }
         List<Integer> indexList = new ArrayList<>();
-        AllelePackage[][] alts = new AllelePackage[potentialPositions.length][maxAltNum];
+        AllelePackage[][] alts = new AllelePackage[potentialPositions.length][maxAltNum];   // why alternative allele should have a single allelepackage? and why the length of 2 dimension is maxAltNum?
         int[][] altCounts = new int[potentialPositions.length][maxAltNum];
         for (int i = 0; i < potentialPositions.length; i++) {
             indexList.add(i);

@@ -65,14 +65,14 @@ class BuildVariationLibrary extends AppAbstract {
     public void retrieveAppParameters(String[] args) {
         CommandLineParser parser = new DefaultParser();
         try {
-            CommandLine line = parser.parse(options, args);
+            CommandLine line = parser.parse(options, args); // what is parse? directly parse the command line?
             String inOpt = null;
             this.referenceFileS = line.getOptionValue("a");
             String[] tem = line.getOptionValue("b").split(":");
             this.chrom = Short.parseShort(tem[0]);
-            long start = System.nanoTime();
+            long start = System.nanoTime(); // mention that it is not 100% accurate.
             System.out.println("Reading reference genome from "+ referenceFileS);
-            FastaBit genomeFa = new FastaBit(referenceFileS);
+            FastaBit genomeFa = new FastaBit(referenceFileS);   // read sequence data into bit
             System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
             int chromIndex = genomeFa.getIndexByDescription(String.valueOf(this.chrom));
             if (tem.length == 1) {
@@ -154,7 +154,7 @@ class BuildVariationLibrary extends AppAbstract {
                 e.printStackTrace();
                 System.exit(1);
             }
-            VariationLibrary vl = new VariationLibrary (ingList, maoThresh, FastCall2.maxAltNum, chrom, binStarts[i]);
+            VariationLibrary vl = new VariationLibrary (ingList, maoThresh, FastCall2.maxAltNum, chrom, binStarts[i]);  // why build variationLibrary here?
             vlList.add(vl);
         }
         VariationLibrary chromVl = VariationLibrary.getInstance(vlList);
@@ -176,7 +176,7 @@ class BuildVariationLibrary extends AppAbstract {
         public IndividualGenotype call() throws Exception {
             File f = new File (fileS);
             if (!f.exists()) return null;
-            IndividualGenotype ing = new IndividualGenotype(this.fileS);
+            IndividualGenotype ing = new IndividualGenotype(this.fileS);    // ing contains all the alleles for this individual
             return ing;
         }
     }

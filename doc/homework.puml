@@ -1,0 +1,74 @@
+@startuml
+title Detailed SDS Methodology Flowchart
+
+start
+partition "Data Preprocessing" {
+    :Download UK10K data from EGA;
+    :Initial QC filtering\n(exclude non-European samples);
+    :Calculate migration singletons;
+    :Remove outliers by:\n- High migration singleton %\n- Depth-adjusted singleton count;
+    note
+    • Migration singletons = singletons also present in non-EUR 1000G pops
+    • Depth adjustment using linear model
+    end note
+    :Final dataset:\n3,195 samples (1,647 ALSPAC + 1,548 TwinsUK);
+    :SNP filtering:\nMAF>5%, HWE p>1e-6\nAncestral annotation check;
+}
+
+partition "Simulation Framework" {
+    :Demographic modeling\n(Tennessen/Nelson/Gazave models);
+    note
+    3 demographic models compared
+    end note
+    :Genealogy simulation\n(ms/MSPRIME for large samples);
+    :Allele frequency trajectory modeling\n(simuPOP backward simulation);
+    :Selection scenarios:\n- Neutral drift\n- Recent selection (100 gen)\n- Ancient selection (post-100 gen);
+    :Parameter sweep:\n- Selection coefficients (s=0.001-0.1)\n- Admixture models;
+    note
+    • Admixture scenarios with pop split
+    • 100-200 replicates per parameter set
+    end note
+}
+
+partition "SDS Core Calculation" {
+    while (For each SNP) is (Done?)
+        :Singleton detection:\nSNPs with count=1 in sample;
+        :Calculate distances to nearest\nupstream/downstream singletons;
+        :Adjust for mapping bias:\n- Read depth correction\n- Singleton observability constants;
+        :Model tip-branch lengths:\nGamma(α,β) per allele;
+        :MLE optimization:\nEstimate β'_ancestral/β'_derived\n(nlm in R);
+        :Calculate raw SDS = log(α_a/β'_a / α_d/β'_d);
+        :Standardize by DAF bins (1% intervals)\nExcluding chr2/6/10;
+    endwhile
+}
+
+partition "Validation & Analysis" {
+    :Compare with 1000 Genomes:\n- Frequency correlations\n- Population differentiation;
+    :iHS calculation\n(selscan with phased haplotypes);
+    :LD Score regression\nGenetic covariance analysis;
+    :Temporal analysis:\n- Tip-length estimation\n- Lactase persistence timing;
+    note
+    • Temporal analysis combines:
+      - Tip-length estimation (Fig S10)
+      - Selection timing simulation (Fig S14)
+    end note
+    :Functional annotation:\n- GWAS catalog enrichment\n- Pigmentation variants analysis;
+    :Bias control:\n- MHC reference bias check\n- Background selection assessment;
+    note
+    • MHC analysis includes:
+      - Read depth asymmetry tests
+      - Regional LD structure checks
+    end note
+}
+
+partition "Output & Visualization" {
+    :Genome-wide SDS scores;
+    :LocusZoom plots\n(LCT, MHC, KITLG regions);
+    :Polygenic adaptation analysis;\n- Height GWAS correlation\n- LD Score regression results;
+    :Temporal estimation plots (Fig S14 selection timing);
+    :Enrichment analysis plots (Fig S19 pigmentation);
+}
+
+stop
+
+@enduml

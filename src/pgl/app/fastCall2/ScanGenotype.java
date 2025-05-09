@@ -488,7 +488,7 @@ class ScanGenotype extends AppAbstract {
                 Process p = rt.exec(command);
                 String temp = null;
                 BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+                BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream())); // what error?
                 DataOutputStream dis = null;
                 String current = br.readLine();
                 List<String> currentList = null;
