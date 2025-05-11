@@ -24,7 +24,7 @@ public class BaseEncoder {
     /**
      * Sequence length in int using 2 bits coding to pack 16 bases.
      */
-    public static final int intChunkSize = 16;
+    public static final int intChunkSize = 16;  // because one int have 32 bytes, while 1 bp is compressed to 2 byte. An int can store 16 bp sequence.
     /**
      * Sequence length in short using 2 bits coding to pack 8 bases.
      */

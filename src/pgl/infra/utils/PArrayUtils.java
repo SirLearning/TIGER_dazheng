@@ -192,7 +192,7 @@ public class PArrayUtils {
      */
     public static int[] getIndicesByDescendingValue(int[] array) {
         int[] index = getIndicesByAscendingValue(array);
-        ArrayUtils.reverse(index);
+        ArrayUtils.reverse(index);  // to descending order, like 3, 2, 1.
         return index;
     }
     
@@ -203,16 +203,16 @@ public class PArrayUtils {
      */
     public static int[] getIndicesByAscendingValue(int[] array) {
         int[] inputArray = new int[array.length];
-        System.arraycopy(array, 0, inputArray, 0, array.length);
-        Integer[] idx = new Integer[inputArray.length];
-        for( int i = 0 ; i < idx.length; i++ ) idx[i] = i;
+        System.arraycopy(array, 0, inputArray, 0, array.length);    // create a new array named inputArray to perform the following comparison.
+        Integer[] idx = new Integer[inputArray.length]; // index record of inputArray
+        for( int i = 0 ; i < idx.length; i++ ) idx[i] = i;  // the original order of index
         Arrays.sort(idx, new Comparator<Integer>() {
             public int compare(Integer i1, Integer i2) {
                 return Integer.compare(inputArray[i1], inputArray[i2]);
             }
-        });
+        }); // sort the index number into new order depend on the array compared.
         int[] index = new int[idx.length];
-        for (int i = 0; i < index.length; i++) index[i] = idx[i];
+        for (int i = 0; i < index.length; i++) index[i] = idx[i];   // ascending order means from small to big, like 1, 2, 3...
         
         return index;
     }

@@ -116,10 +116,10 @@ class BuildVariationLibrary extends AppAbstract {
         List<File> ingTaxaDirList = IOUtils.getDirListInDir(this.ingDirS);
         taxaNames = new String[ingTaxaDirList.size()];
         for (int i = 0; i < ingTaxaDirList.size(); i++) {
-            taxaNames[i] = ingTaxaDirList.get(i).getName();
+            taxaNames[i] = ingTaxaDirList.get(i).getName(); // getName is a method in File class, used for getting the file name
         }
         Arrays.sort(taxaNames);
-        Dyad<int[][], int[]> d = FastCall2.getBins(this.regionStart, this.regionEnd, FastCall2.disBinSize);
+        Dyad<int[][], int[]> d = FastCall2.getBins(this.regionStart, this.regionEnd, FastCall2.disBinSize); // usually use the dyad to get 5M bins
         int[][] binBound = d.getFirstElement();
         int[] binStarts = d.getSecondElement();
         StringBuilder sb = new StringBuilder();
@@ -145,6 +145,8 @@ class BuildVariationLibrary extends AppAbstract {
 
                 for (int j = 0; j < futureList.size(); j++) {
                     IndividualGenotype ing = futureList.get(j).get();
+                    // IndividualGenotype has a field called AllelePackList use int[] to store the genotype information.
+                    // AllelePackage class has a field called allelePack which is an int[].
                     if (ing == null) continue;
                     ingList.add(ing);
                 }
@@ -154,15 +156,15 @@ class BuildVariationLibrary extends AppAbstract {
                 e.printStackTrace();
                 System.exit(1);
             }
-            VariationLibrary vl = new VariationLibrary (ingList, maoThresh, FastCall2.maxAltNum, chrom, binStarts[i]);  // why build variationLibrary here?
-            vlList.add(vl); // test
+            VariationLibrary vl = new VariationLibrary (ingList, maoThresh, FastCall2.maxAltNum, chrom, binStarts[i]);  // what data variationLibrary store?
+            vlList.add(vl);
         }
-        VariationLibrary chromVl = VariationLibrary.getInstance(vlList);
+        VariationLibrary chromVl = VariationLibrary.getInstance(vlList);    // combine all VariationLibrary into one with the length of whole chromosome.
         File f = new File (vLibDirS);
         f.mkdir();
         sb.setLength(0);
         sb.append(chrom).append("_").append(this.regionStart).append("_").append(regionEnd).append(".lib.gz");
-        chromVl.writeBinaryFileS(new File (f, sb.toString()).getAbsolutePath());
+        chromVl.writeBinaryFileS(new File (f, sb.toString()).getAbsolutePath());    // the format of .lib file.
         System.out.println("Building genetic variation library is finished.");
     }
 
@@ -176,7 +178,7 @@ class BuildVariationLibrary extends AppAbstract {
         public IndividualGenotype call() throws Exception {
             File f = new File (fileS);
             if (!f.exists()) return null;
-            IndividualGenotype ing = new IndividualGenotype(this.fileS);    // ing contains all the alleles for this individual
+            IndividualGenotype ing = new IndividualGenotype(this.fileS);    // .ing file contains all the alleles for this individual
             return ing;
         }
     }

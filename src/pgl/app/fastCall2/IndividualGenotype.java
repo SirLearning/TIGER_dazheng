@@ -11,7 +11,7 @@ public class IndividualGenotype implements Comparable<IndividualGenotype> {
     short chrom = Short.MIN_VALUE;
     int binStart = Integer.MIN_VALUE;
     int binEnd = Integer.MIN_VALUE;
-    ArrayList<int[]> allelePackList = new ArrayList<>();
+    ArrayList<int[]> allelePackList = new ArrayList<>();    // an int[] is an allelePack
 
     public IndividualGenotype (String fileS) {
         this.readFile(fileS);
@@ -68,11 +68,11 @@ public class IndividualGenotype implements Comparable<IndividualGenotype> {
     }
 
     public int getPositionNumber () {
-        return allelePackList.size();
+        return allelePackList.size();   // an allelePack is an allele at a single site
     }
 
     public int getAlleleChromPosition(int alleleIndex) {
-        return AllelePackage.getAlleleChromPosition(allelePackList.get(alleleIndex), binStart);
+        return AllelePackage.getAlleleChromPosition(allelePackList.get(alleleIndex), binStart); // alleleIndex is a recursive j (begin with 0) to get every allelePack in the list
     }
 
     public int[] getAllelePack(int alleleIndex) {

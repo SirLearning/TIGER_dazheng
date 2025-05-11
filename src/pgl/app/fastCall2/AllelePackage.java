@@ -8,7 +8,7 @@ import pgl.infra.dna.allele.AlleleEncoder;
  * Using array of int, an allele pack stores allele state, relative position of the allele in bin, length of Indel (if it exists), and sequence of the Indel
  */
 class AllelePackage implements Comparable<AllelePackage>{
-    int[] allelePack = null;
+    int[] allelePack = null;    // this class is not used to store, but to process data to an allelePack, which is actually an int[].
 
     public AllelePackage (int[] allelePacks) {
         this.allelePack = allelePacks;
@@ -74,7 +74,7 @@ class AllelePackage implements Comparable<AllelePackage>{
               else continue;
             }
         }
-        return 0;
+        return 0;   // compare allelePack in this AllelePackage
     }
 
     public int hashCode() {
@@ -122,9 +122,8 @@ class AllelePackage implements Comparable<AllelePackage>{
             else {
                 allelePack[i+1] = BaseEncoder.getIntSeqFromSubBaseCodingArray(seqCodings, i*BaseEncoder.intChunkSize, i*BaseEncoder.intChunkSize+remainder);
             }
-
         }
-        return allelePack;
+        return allelePack;  // create an allelePack (including indel sequences)
     }
 
     /**
@@ -138,7 +137,7 @@ class AllelePackage implements Comparable<AllelePackage>{
             return indelLength/BaseEncoder.intChunkSize+1;  // 1 is for "v"
         }
         else {
-            return indelLength/BaseEncoder.intChunkSize+2;  // why "+2"? for the remainder (which < 16)
+            return indelLength/BaseEncoder.intChunkSize+2;  // 1 for "v", 1 for remainder
         }
     }
 
