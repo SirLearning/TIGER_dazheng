@@ -25,6 +25,7 @@ public class FastCall2 {
 
     static final HashByteByteMap pileupAscIIToAlleleCodingMap =
             HashByteByteMaps.getDefaultFactory().withDefaultValue((byte)-1).newImmutableMap(pileupAlleleAscIIs, AlleleEncoder.alleleCodings);   // what class withDefaultValue((byte)-1) returns?
+    // key: pileupAlleleAscIIs; value: alleleCodings
 
     public FastCall2 (String[] args) {
         long timeStart = System.nanoTime();

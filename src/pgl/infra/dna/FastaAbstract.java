@@ -19,7 +19,7 @@ import pgl.infra.utils.IOUtils;
  * @author feilu
  */
 public abstract class FastaAbstract implements FastaInterface {
-    FastaRecordInterface[] records = null;
+    FastaRecordInterface[] records = null;  // FastaRecordBit implements FastaRecordInterface
     protected enum sortType {byName, byNameValue, byID, byLengthAscending, byLengthDescending}
     sortType sType = null;
     

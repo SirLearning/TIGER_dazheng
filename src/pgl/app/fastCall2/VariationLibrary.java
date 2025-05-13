@@ -137,7 +137,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
     }
 
     public int getPositionIndex (int pos) {
-        return Arrays.binarySearch(positions, pos);
+        return Arrays.binarySearch(positions, pos); // position is a int[] field only store the positions information
     }
 
     /**
@@ -146,7 +146,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
      * @return Integer.MIN_VALUE if the query pos is greater than the end of the position list
      */
     public int getStartIndex (int pos) {
-        int index = this.getPositionIndex(pos);
+        int index = this.getPositionIndex(pos); // find the position index
         if (index < 0) {
             index = -index -1;
             if (index == positions.length) {

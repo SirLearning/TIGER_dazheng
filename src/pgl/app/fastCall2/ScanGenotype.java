@@ -51,14 +51,14 @@ class ScanGenotype extends AppAbstract {
     //Number of threads (taxa number to be processed at the same time)
     int threadsNum = PGLConstraints.parallelLevel;
 
-    String[] subDirS = {"indiVCF", "indiCounts", "VCF"};
+    String[] subDirS = {"indiVCF", "indiCounts", "VCF"};    // why there is indiVCF?
 
     HashMap<String, List<String>> taxaBamsMap = null;
     HashMap<String, Double> taxaCoverageMap = null;
     String[] taxaNames = null;
 
     IntDoubleMap factorialMap = null;
-    int maxFactorial = 150;
+    int maxFactorial = 150; // why 150? and is used for what? short reads alignment?
 
     String vLibPosFileS = null;
 
@@ -78,8 +78,8 @@ class ScanGenotype extends AppAbstract {
         this.creatAppOptions();
         this.retrieveAppParameters(args);
 
-        this.mkDir();
-        this.processVariationLibrary();
+        this.mkDir();   // make 3 directions
+        this.processVariationLibrary(); // create a file store positions in the region
         this.creatFactorialMap();
 
         /*
@@ -178,7 +178,8 @@ class ScanGenotype extends AppAbstract {
             this.printInstructionAndUsage();
             System.exit(0);
         }
-        this.parseTaxaBamMap(this.taxaBamMapFileS);
+        this.parseTaxaBamMap(this.taxaBamMapFileS); // parse the taxa and bam information
+        // the taxon name, coverage and bam file sites are recorded in the taxaBamMap.txt file
     }
 
     @Override
@@ -314,27 +315,27 @@ class ScanGenotype extends AppAbstract {
     }
 
     public void scanIndiCountsByThreadPool () {
-        FastaRecordBit frb = genomeFa.getFastaRecordBit(chromIndex);
-        posRefMap = new HashMap<>();
-        posAllelePackMap = new HashMap<>(vlEndIndex-vlStartIndex);
-        positions = new int[vlEndIndex-vlStartIndex];
+        FastaRecordBit frb = genomeFa.getFastaRecordBit(chromIndex);    // store by Sequence3Bit field, which is inherited by FastaRecordBit
+        posRefMap = new HashMap<>();    // reference genome map
+        posAllelePackMap = new HashMap<>(vlEndIndex-vlStartIndex);  // the map key is position, what is the value data type?
+        positions = new int[vlEndIndex-vlStartIndex];   // ok, it is the same. but how?
         for (int i = vlStartIndex; i < vlEndIndex; i++) {
-            posRefMap.put(vl.positions[i], String.valueOf(frb.getBase(vl.positions[i]-1)));
-            posAllelePackMap.put(vl.positions[i], vl.getAllelePacks(i));
-            positions[i-vlStartIndex] = vl.positions[i];
+            posRefMap.put(vl.positions[i], String.valueOf(frb.getBase(vl.positions[i]-1))); // base in reference genome, but why the positionIndex needs to - 1? every base needs a K-V map, is big for memory.
+            posAllelePackMap.put(vl.positions[i], vl.getAllelePacks(i));    // key: position; value: AllelePackage[] (alleles at one position)
+            positions[i-vlStartIndex] = vl.positions[i];    // make positions in this region store into a new int[]
         }
-        Set<String> taxaSet = taxaBamsMap.keySet();
-        ArrayList<String> taxaList = new ArrayList(taxaSet);
-        Collections.sort(taxaList);
-        Dyad<int[][], int[]> d = FastCall2.getBins(this.regionStart, this.regionEnd, FastCall2.scanBinSize);
+        Set<String> taxaSet = taxaBamsMap.keySet(); // created in retrieveAppParameters. key: taxa; value: List<String>
+        ArrayList<String> taxaList = new ArrayList(taxaSet);    // from set to list? why directly to list?
+        Collections.sort(taxaList); // the super-super-class of ArrayList implements Collection
+        Dyad<int[][], int[]> d = FastCall2.getBins(this.regionStart, this.regionEnd, FastCall2.scanBinSize);    // 5M bp bin parallel process tradition
         int[][] binBound = d.getFirstElement();
         int[] binStarts = d.getSecondElement();
         LongAdder counter = new LongAdder();
         ExecutorService pool = Executors.newFixedThreadPool(this.threadsNum);
         List<Future<IndiCount>> resultList = new ArrayList<>();
-        for (int i = 0; i < taxaList.size(); i++) {
-            List<String> bamPaths = taxaBamsMap.get(taxaList.get(i));
-            StringBuilder sb = new StringBuilder(samtoolsPath);
+        for (int i = 0; i < taxaList.size(); i++) { // recursive for each taxon
+            List<String> bamPaths = taxaBamsMap.get(taxaList.get(i));   // a taxon can have many bam, is it the same in disc?
+            StringBuilder sb = new StringBuilder(samtoolsPath); // sb start with samtools path
             sb.append(" mpileup --no-output-ends ").append(this.baqMode).append("-q ").append(this.mappingQThresh).append(" -Q ").append(this.baseQThresh).append(" -f ").append(this.referenceFileS);
             for (int j = 0; j < bamPaths.size(); j++) {
                 sb.append(" ").append(bamPaths.get(j));
@@ -343,9 +344,9 @@ class ScanGenotype extends AppAbstract {
             sb.append(chrom).append(":").append(this.regionStart).append("-").append(this.regionEnd);
             String command = sb.toString();
 //            System.out.println(command);
-            IndiCount idv = new IndiCount(command, taxaList.get(i), binBound, binStarts, bamPaths, counter);
-            Future<IndiCount> result = pool.submit(idv);
-            resultList.add(result);
+            IndiCount idv = new IndiCount(command, taxaList.get(i), binBound, binStarts, bamPaths, counter);    // return an indiCount class and write .iac files
+            Future<IndiCount> result = pool.submit(idv);    // why there is a pool and need to do the for loop?
+            resultList.add(result); // is there a need to do this?
         }
         try {
             pool.shutdown();
@@ -393,9 +394,9 @@ class ScanGenotype extends AppAbstract {
         }
 
         public void setDos (int queryPos) {
-            int binIndex = Arrays.binarySearch(binStarts, queryPos);
-            if (binIndex < 0) binIndex = -binIndex-2;
-            if (binIndex != currentBinIndex) {
+            int binIndex = Arrays.binarySearch(binStarts, queryPos);    // find the bin
+            if (binIndex < 0) binIndex = -binIndex-2;   // to the index of the matched position in this bin
+            if (binIndex != currentBinIndex) {  // every bin write a
                 if (currentBinIndex > -1) this.closeDos();
                 StringBuilder sb = new StringBuilder();
                 sb.append(chrom).append("_").append(binBound[binIndex][0]).append("_").append(binBound[binIndex][1]).append(".iac.gz");
@@ -407,11 +408,11 @@ class ScanGenotype extends AppAbstract {
                     dos.writeInt(binBound[binIndex][0]);
                     dos.writeInt(binBound[binIndex][1]);
                     vlBinStartIndex = vl.getStartIndex(binBound[binIndex][0]);
-                    vlBinEndIndex = vl.getEndIndex(binBound[binIndex][1]-1);
+                    vlBinEndIndex = vl.getEndIndex(binBound[binIndex][1]-1);    // output the position index that <= bin end
 //                    if (vlBinStartIndex < 0 || vlBinEndIndex < 0) {
 ////                        unlikely to happen
 //                    }
-                    dos.writeInt(vlBinEndIndex-vlBinStartIndex);
+                    dos.writeInt(vlBinEndIndex-vlBinStartIndex);    // positions number
                 }
                 catch (Exception e) {
                     e.printStackTrace();
@@ -441,7 +442,7 @@ class ScanGenotype extends AppAbstract {
 
         public void writeMissing () {
             try {
-                dos.writeByte((byte)-1);
+                dos.writeByte((byte)-1);    // means nothing? so what is something?
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -485,43 +486,44 @@ class ScanGenotype extends AppAbstract {
         public IndiCount call() throws Exception {
             try {
                 Runtime rt = Runtime.getRuntime();
-                Process p = rt.exec(command);
+                Process p = rt.exec(command);   // directly run?
                 String temp = null;
-                BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream())); // what error?
-                DataOutputStream dis = null;
-                String current = br.readLine();
+                BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));  // why input stream is from process?
+                BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream())); // what error? the error after launch?
+                DataOutputStream dis = null;    // wrong written
+                String current = br.readLine(); // what is the content in br?
                 List<String> currentList = null;
                 int currentPosition = -1;
                 if (current != null) {
-                    currentList = PStringUtils.fastSplit(current);
-                    currentPosition = Integer.parseInt(currentList.get(1));
+                    currentList = PStringUtils.fastSplit(current);  // the use of List<String>, can learn more about PStringUtils
+                    currentPosition = Integer.parseInt(currentList.get(1)); // prove br is the output of mpileup
                 }
-                StringBuilder baseS = new StringBuilder();
+                StringBuilder baseS = new StringBuilder();  // why base needs a StringBuilder?
                 StringBuilder indelSb = new StringBuilder();
                 for (int i = 0; i < positions.length; i++) {
-                    this.setDos(positions[i]);
+                    this.setDos(positions[i]);  // write the basic information for each bin (identify by binIndex)
                     //at the end of pileup file
                     if (current == null) {
-                        this.writeMissing();
+                        this.writeMissing();    // no mpileup output?
                     }
                     else {
-                        if (positions[i] == currentPosition) {
-                            String ref = posRefMap.get(currentPosition);
-                            AllelePackage[] altAlleles = posAllelePackMap.get(currentPosition);
+                        if (positions[i] == currentPosition) {  // so one call only record one currentPosition? but is mpileup run for every taxon and for each bin? it reruns everything. there must be a difference.
+                            String ref = posRefMap.get(currentPosition);    // get ref base
+                            AllelePackage[] altAlleles = posAllelePackMap.get(currentPosition); // AllelePackage[] from VariationLibrary
                             baseS.setLength(0);
                             int siteDepth = 0;
                             for (int j = 0; j < bamPaths.size(); j++) {
-                                siteDepth+=Integer.parseInt(currentList.get(3+j*3));
-                                baseS.append(currentList.get(4+j*3));
+                                siteDepth+=Integer.parseInt(currentList.get(3+j*3));    // directly count depth; also for the same taxon; no difference with disc. but disc did not record the depth, it directly decides the heterozygous or homozygous
+                                baseS.append(currentList.get(4+j*3));   // baseS means base String
                             }
                             if (siteDepth == 0) {
                                 this.writeMissing();
                             }
                             else {
 //                                FastCall2.removeFirstPositionSign(baseS);
-                                int[] alleleCounts = getAlleleCounts (altAlleles, baseS.toString().toUpperCase(), siteDepth, indelSb);
-                                this.writeAlleleCounts(alleleCounts);
+                                int[] alleleCounts = getAlleleCounts (altAlleles, baseS.toString().toUpperCase(), siteDepth, indelSb);  // return an int[]. it is only the allele base count number (with reference genotype at index 0)
+                                // why not directly store the count information at the first time when doing mpileup?
+                                this.writeAlleleCounts(alleleCounts);   // same question: why not write at the first time? no built allelePack? but the count information can be stored in a file for future count?
                             }
                             current = br.readLine();
                             if (current != null) {
@@ -533,7 +535,7 @@ class ScanGenotype extends AppAbstract {
                             this.writeMissing();
                         }
                         else {
-                            System.out.println("Current position is greater than pileup position. It should not happen. Program quits");
+                            System.out.println("Current position is greater than pileup position. It should not happen. Program quits");    // debug information
                             System.exit(1);
                         }
                     }
@@ -543,7 +545,7 @@ class ScanGenotype extends AppAbstract {
                 p.waitFor();
                 this.writeEmptyFiles();
                 StringBuilder sb = new StringBuilder();
-                sb.append("mpileup command: ").append(command).append("\n");
+                sb.append("mpileup command: ").append(command).append("\n");    // record command in the end
                 sb.append("mpileup error profile: ");
                 while ((current = bre.readLine()) != null) {
                     sb.append(current).append("\n");
@@ -556,7 +558,7 @@ class ScanGenotype extends AppAbstract {
                 ee.printStackTrace();
             }
             counter.increment();
-            int cnt = counter.intValue();
+            int cnt = counter.intValue();   // the number of taxa counted
             if (cnt%50 == 0) System.out.println("Finished individual genotype allele counting in " + String.valueOf(cnt) + " taxa. Total: " + String.valueOf(taxaBamsMap.size()));
             return this;
         }
@@ -643,14 +645,14 @@ class ScanGenotype extends AppAbstract {
 
     private int[] getAlleleCounts (AllelePackage[] altAlleles, String baseS, int siteDepth, StringBuilder indelSb) {
         byte[] baseB = baseS.getBytes();
-        int[] altAlleleCounts = new int[altAlleles.length];
+        int[] altAlleleCounts = new int[altAlleles.length]; // the count is in one taxon?
         int index = Integer.MIN_VALUE;
         int vCnt = 0;
         for (int i = 0; i < baseB.length; i++) {
-            byte queryAlleleCoding = FastCall2.pileupAscIIToAlleleCodingMap.get(baseB[i]);
+            byte queryAlleleCoding = FastCall2.pileupAscIIToAlleleCodingMap.get(baseB[i]);  // from byte (AscIIs) to byte ({000, 001, 010, 011, 100, 101})
             int queryIndelLength = 0;
-            index = Arrays.binarySearch(AlleleEncoder.alleleCodings, queryAlleleCoding);
-            if (index > 3) {
+            index = Arrays.binarySearch(AlleleEncoder.alleleCodings, queryAlleleCoding);    // find indel
+            if (index > 3) {    // insertion and deletion are {4, 5}
                 int startIndex = i+1;
                 int endIndex = i+2;
                 for (int j = i+2; j < baseB.length; j++) {
@@ -669,17 +671,17 @@ class ScanGenotype extends AppAbstract {
             }
             for (int j = 0; j < altAlleles.length; j++) {
                 if (altAlleles[j].getAlleleCoding() == queryAlleleCoding && altAlleles[j].getIndelLength() == queryIndelLength) {
-                    altAlleleCounts[j]++;
+                    altAlleleCounts[j]++;   // count every base?
                     vCnt++;
                 }
             }
         }
         int[] alleleCounts = new int[altAlleles.length+1];
-        alleleCounts[0] = siteDepth - vCnt;
+        alleleCounts[0] = siteDepth - vCnt; // reference genotype count
         for (int i = 0; i < altAlleles.length; i++) {
             alleleCounts[i+1] = altAlleleCounts[i];
         }
-        return alleleCounts;
+        return alleleCounts;    // return a int[]
     }
 
     private String getGenotypeByShort (short[] cnt) {
@@ -738,16 +740,16 @@ class ScanGenotype extends AppAbstract {
 
     private void processVariationLibrary () {
         StringBuilder sb = new StringBuilder();
-        sb.append(this.chrom).append("_").append(this.regionStart).append("_").append(regionEnd).append(".pos.txt");
+        sb.append(this.chrom).append("_").append(this.regionStart).append("_").append(regionEnd).append(".pos.txt");    // new file
         this.vLibPosFileS = new File (this.outputDirS, sb.toString()).getAbsolutePath();
-        this.vl = new VariationLibrary(this.libFileS);
+        this.vl = new VariationLibrary(this.libFileS);  // read the VariationLibrary
         if (this.chrom != vl.getChrom()) {
             System.out.println("The chromosome number of library and the specified one do not match. Program quits.");
             System.exit(0);
         }
         try {
-            vlStartIndex = vl.getStartIndex(this.regionStart);
-            vlEndIndex = vl.getEndIndex(this.regionEnd);
+            vlStartIndex = vl.getStartIndex(this.regionStart);  // return start position index
+            vlEndIndex = vl.getEndIndex(this.regionEnd);        // return end position index
             if (vlStartIndex == Integer.MIN_VALUE || vlEndIndex == Integer.MIN_VALUE) {
                 System.out.println("The chromosome region was incorrectly set. Program quits.");
                 System.exit(0);
@@ -755,7 +757,7 @@ class ScanGenotype extends AppAbstract {
             BufferedWriter bw = IOUtils.getTextWriter(this.vLibPosFileS);
             for (int i = vlStartIndex; i < vlEndIndex; i++) {
                 sb.setLength(0);
-                sb.append(this.chrom).append("\t").append(vl.getPosition(i));
+                sb.append(this.chrom).append("\t").append(vl.getPosition(i));   // write to position file
                 bw.write(sb.toString());
                 bw.newLine();
             }
@@ -768,9 +770,10 @@ class ScanGenotype extends AppAbstract {
     }
 
     private void creatFactorialMap () {
-        this.factorialMap = HashIntDoubleMaps.getDefaultFactory().newMutableMap();
+        this.factorialMap = HashIntDoubleMaps.getDefaultFactory().newMutableMap();  // why factorial? is the factorial like x!
         for (int i = 0; i < this.maxFactorial+1; i++) {
-            this.factorialMap.put(i, factorial(i));
+            this.factorialMap.put(i, factorial(i)); // longFactorials = new long[]{1L, 1L, 2L, 6L, 24L, 120L...
+            // why use factorial map?
         }
     }
 
@@ -778,7 +781,7 @@ class ScanGenotype extends AppAbstract {
         File f = new File (this.outputDirS);
         f.mkdir();
         for (int i = 0; i < subDirS.length; i++) {
-            f = new File(outputDirS, subDirS[i]);
+            f = new File(outputDirS, subDirS[i]);   // create 3 sub-directions {"indiVCF", "indiCounts", "VCF"}
             f.mkdir();
         }
     }
@@ -787,28 +790,29 @@ class ScanGenotype extends AppAbstract {
         this.taxaBamsMap = new HashMap<>();
         this.taxaCoverageMap = new HashMap<>();
         try {
-            BufferedReader br = IOUtils.getTextReader(taxaBamMapFileS);
-            String temp = br.readLine();
-            ArrayList<String> taxaList = new ArrayList();
-            ArrayList<String> pathList = new ArrayList();
+            BufferedReader br = IOUtils.getTextReader(taxaBamMapFileS); // read file
+            String temp = br.readLine();    // read the first column name row?
+            ArrayList<String> taxaList = new ArrayList();   // length changeable
+            ArrayList<String> pathList = new ArrayList();   // no use after
             int nBam = 0;
             while ((temp = br.readLine()) != null) {
-                String[] tem = temp.split("\t");
+                // duplicate with the read process in DiscoverVariation
+                String[] tem = temp.split("\t");    // is there a need to set the length of String[]?
                 taxaList.add(tem[0]);
-                String[] bams = new String[tem.length-2] ;
+                String[] bams = new String[tem.length-2] ;  // minus the taxa and coverage column
                 for (int i = 0; i < bams.length; i++) {
-                    bams[i] = tem[i+2];
-                    pathList.add(bams[i]);
+                    bams[i] = tem[i+2]; // add bam path
+                    pathList.add(bams[i]);  // why all the bam (with different taxon) are stored in pathList?
                 }
                 Arrays.sort(bams);
-                List<String> bamList = Arrays.asList(bams);
+                List<String> bamList = Arrays.asList(bams); // Array -> List, transfer from bams
                 taxaBamsMap.put(tem[0], bamList);
                 taxaCoverageMap.put(tem[0], Double.valueOf(tem[1]));
-                nBam+=bams.length;
+                nBam+=bams.length;  // why not directly use pathList's length?
             }
-            taxaNames = taxaList.toArray(new String[taxaList.size()]);
+            taxaNames = taxaList.toArray(new String[taxaList.size()]);  // List -> Array
             Arrays.sort(taxaNames);
-            HashSet<String> taxaSet = new HashSet<>(taxaList);
+            HashSet<String> taxaSet = new HashSet<>(taxaList);  // no repeat
             if (taxaSet.size() != taxaNames.length) {
                 System.out.println("Taxa names are not unique. Programs quits");
                 System.exit(0);
