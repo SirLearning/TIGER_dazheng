@@ -191,9 +191,9 @@ class ScanGenotype extends AppAbstract {
 
     public void mkFinalVCFFromIndiCounts () {
         String outfileS = new File(outputDirS, subDirS[2]).getAbsolutePath();
-        outfileS = new File(outfileS, "chr"+PStringUtils.getNDigitNumber(3, chrom)+".vcf").getAbsolutePath();
+        outfileS = new File(outfileS, "chr"+PStringUtils.getNDigitNumber(3, chrom)+".vcf").getAbsolutePath();   // finally!!
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSS");
+            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSS"); // record the date
             Date dt = new Date();
             String S = sdf.format(dt);
             BufferedWriter bw = IOUtils.getTextWriter(outfileS);
