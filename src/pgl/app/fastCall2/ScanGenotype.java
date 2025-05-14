@@ -58,7 +58,7 @@ class ScanGenotype extends AppAbstract {
     String[] taxaNames = null;
 
     IntDoubleMap factorialMap = null;
-    int maxFactorial = 150; // why 150? and is used for what? short reads alignment?
+    int maxFactorial = 150; // why 150? and is used for what? short reads alignment? 150 is not a factorial?
 
     String vLibPosFileS = null;
 
@@ -193,7 +193,7 @@ class ScanGenotype extends AppAbstract {
         String outfileS = new File(outputDirS, subDirS[2]).getAbsolutePath();
         outfileS = new File(outfileS, "chr"+PStringUtils.getNDigitNumber(3, chrom)+".vcf").getAbsolutePath();   // finally!!
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSS"); // record the date
+            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSS"); // format method to record the date
             Date dt = new Date();
             String S = sdf.format(dt);
             BufferedWriter bw = IOUtils.getTextWriter(outfileS);
@@ -212,9 +212,9 @@ class ScanGenotype extends AppAbstract {
             bw.write("##INFO=<ID=MAF,Number=1,Type=Float,Description=\"Minor allele frequency\">\n");
             bw.write("##ALT=<ID=D,Description=\"Deletion\">\n");
             bw.write("##ALT=<ID=I,Description=\"Insertion\">\n");
-            Dyad<int[][], int[]> d = FastCall2.getBins(this.regionStart, this.regionEnd, FastCall2.scanBinSize);
+            Dyad<int[][], int[]> d = FastCall2.getBins(this.regionStart, this.regionEnd, FastCall2.scanBinSize);    // scanBinSize is also 5M bp
             int[][] binBound = d.getFirstElement();
-            int[] binStarts = d.getSecondElement();
+            int[] binStarts = d.getSecondElement(); // used to identify the number of bin
                 StringBuilder sb = new StringBuilder("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT");
             for (int i = 0; i < taxaNames.length; i++) {
                 sb.append("\t").append(taxaNames[i]);
@@ -222,10 +222,10 @@ class ScanGenotype extends AppAbstract {
             bw.write(sb.toString());
             bw.newLine();
             List<Future<IndividualCount>> futureList = new ArrayList<>();
-            List<IndividualCount> incList = new ArrayList<>();
+            List<IndividualCount> incList = new ArrayList<>();  // store IndividualCount for each taxon at each bin
             vlBinStartIndex = 0;
             vlBinEndIndex = 0;
-            for (int i = 0; i < binStarts.length; i++) {
+            for (int i = 0; i < binStarts.length; i++) {    // recursive for every bin
                 futureList.clear();
                 incList.clear();
                 String indiCountFolderS = new File(outputDirS, subDirS[1]).getAbsolutePath();
@@ -233,52 +233,56 @@ class ScanGenotype extends AppAbstract {
                     LongAdder counter = new LongAdder();
                     ExecutorService pool = Executors.newFixedThreadPool(this.threadsNum);
                     sb.setLength(0);
-                    sb.append(chrom).append("_").append(binBound[i][0]).append("_").append(binBound[i][1]).append(".iac.gz");
-                    for (int j = 0; j < taxaNames.length; j++) {
+                    sb.append(chrom).append("_").append(binBound[i][0]).append("_").append(binBound[i][1]).append(".iac.gz");   // read .iac in this bin
+                    // why read again? not directly store in memory?
+                    for (int j = 0; j < taxaNames.length; j++) {    // do for every taxon
                         String indiTaxonDirS = new File (indiCountFolderS, taxaNames[j]).getAbsolutePath();
                         String fileS = new File (indiTaxonDirS, sb.toString()).getAbsolutePath();
-                        TaxonCountRead tr = new TaxonCountRead(fileS);
-                        Future<IndividualCount> result = pool.submit(tr);
+                        TaxonCountRead tr = new TaxonCountRead(fileS);  // read a .iac file for each taxon and each bin
+                        Future<IndividualCount> result = pool.submit(tr);   // only to store IndividualCount into memory, transfer from one method to this one
+                        // IndividualCount is not same as IndiCount
                         futureList.add(result);
                     }
                     pool.shutdown();
-                    pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+                    pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);    // wait util all read finish
                     for (int j = 0; j < futureList.size(); j++) {
                         IndividualCount inc = futureList.get(j).get();
-                        if (inc == null) continue;
+                        if (inc == null) continue;  // IndividualCount implements Comparable
                         incList.add(inc);
                     }
-                    Collections.sort(incList);
+                    Collections.sort(incList);  // sort the taxa name
                 }
                 catch (Exception e) {
                     e.printStackTrace();
                     System.exit(1);
                 }
-                vlBinEndIndex = vlBinStartIndex + incList.get(0).alleleNum.length;
+                vlBinEndIndex = vlBinStartIndex + incList.get(0).alleleNum.length;  // position number as index number of VariationLibrary
                 List<Integer> indexList = new ArrayList<>();
                 for (int j = 0; j < incList.get(0).alleleNum.length; j++) {
-                    indexList.add(j);
+                    indexList.add(j);   // a list of the relative positon index (from 0) in the bin
                 }
-                String[] vcfRecords = new String[indexList.size()];
-                indexList.parallelStream().forEach(index -> {
-                    StringBuilder vsb = new StringBuilder();
-                    int currentPosition = positions[index+vlBinStartIndex];
+                String[] vcfRecords = new String[indexList.size()]; // record the whole VCF file
+                indexList.parallelStream().forEach(index -> {   // parallel for each position
+                    StringBuilder vsb = new StringBuilder();    // lines in VCF file
+                    int currentPosition = positions[index+vlBinStartIndex]; // from relative index in bin to real position on chromosome
+                    // write information of this position (in 1 line)
                     vsb.append(chrom).append("\t").append(currentPosition).append("\t").append(chrom).append("-").append(currentPosition)
                             .append("\t").append(posRefMap.get(currentPosition)).append("\t");
+                    // begin with: CHROM POS ID REF
                     AllelePackage[] altAlleles = posAllelePackMap.get(currentPosition);
                     for (int j = 0; j < altAlleles.length; j++) {
-                        vsb.append(altAlleles[j].getAlleleBase()).append(",");
+                        vsb.append(altAlleles[j].getAlleleBase()).append(",");  // add ALT (seperated by ",")
                     }
-                    vsb.deleteCharAt(vsb.length()-1).append("\t.\t.\t");
+                    vsb.deleteCharAt(vsb.length()-1).append("\t.\t.\t");    // delete "," and add QUAL and FILTER
                     List<short[]> siteCountsList = new ArrayList<>();
-                    for (int j = 0; j < incList.size(); j++) {
-                        siteCountsList.add(incList.get(j).alleleCounts[index]);
+                    for (int j = 0; j < incList.size(); j++) {  // record for each taxon
+                        siteCountsList.add(incList.get(j).alleleCounts[index]); // get alleleCounts[index], is a length changeable short[] (length is according to alternative allele number, including reference genotype)
                     }
-                    vsb.append(this.getInfoAndGenotypes(siteCountsList, altAlleles));
+                    vsb.append(this.getInfoAndGenotypes(siteCountsList, altAlleles));   // format the INFO and Genotype elements in the line
                     vcfRecords[index] = vsb.toString();
                 });
                 for (int j = 0; j < vcfRecords.length; j++) {
-                    bw.write(vcfRecords[j]);
+                    bw.write(vcfRecords[j]);    // write lines
                     bw.newLine();
                 }
                 vlBinStartIndex = vlBinEndIndex;
@@ -291,7 +295,7 @@ class ScanGenotype extends AppAbstract {
             e.printStackTrace();
             System.exit(1);
         }
-        this.deleteTemperateFile();
+        this.deleteTemperateFile(); // what files?
         System.out.println("Final VCF is completed at " + outfileS);
         System.out.println("Genotyping is finished.");
     }
@@ -309,7 +313,8 @@ class ScanGenotype extends AppAbstract {
                 System.out.println("Warning: "+ f.getAbsolutePath()+" does not exist");
                 return null;
             }
-            IndividualCount inc = new IndividualCount(this.fileS);
+            IndividualCount inc = new IndividualCount(this.fileS);  // readBinaryFileS
+            // maybe the time to read file from hardware is long. therefore, use parallel
             return inc;
         }
     }
@@ -424,7 +429,7 @@ class ScanGenotype extends AppAbstract {
 
         public void writeAlleleCounts (int[] alleleCounts) {
             try {
-                dos.writeByte((byte)alleleCounts.length);
+                dos.writeByte((byte)alleleCounts.length);   // allele number
                 for (int i = 0; i < alleleCounts.length; i++) {
                     if (alleleCounts[i] < Short.MAX_VALUE) {
                         dos.writeShort((short)alleleCounts[i]);
@@ -504,16 +509,16 @@ class ScanGenotype extends AppAbstract {
                     this.setDos(positions[i]);  // write the basic information for each bin (identify by binIndex)
                     //at the end of pileup file
                     if (current == null) {
-                        this.writeMissing();    // no mpileup output?
+                        this.writeMissing();    // no variation for this taxon at this position
                     }
                     else {
                         if (positions[i] == currentPosition) {  // so one call only record one currentPosition? but is mpileup run for every taxon and for each bin? it reruns everything. there must be a difference.
-                            String ref = posRefMap.get(currentPosition);    // get ref base
+                            String ref = posRefMap.get(currentPosition);    // get ref base, but no use?
                             AllelePackage[] altAlleles = posAllelePackMap.get(currentPosition); // AllelePackage[] from VariationLibrary
                             baseS.setLength(0);
                             int siteDepth = 0;
                             for (int j = 0; j < bamPaths.size(); j++) {
-                                siteDepth+=Integer.parseInt(currentList.get(3+j*3));    // directly count depth; also for the same taxon; no difference with disc. but disc did not record the depth, it directly decides the heterozygous or homozygous
+                                siteDepth+=Integer.parseInt(currentList.get(3+j*3));    // count whole depth; also for the same taxon; no difference with disc. but disc did not record the depth, it directly decides the heterozygous or homozygous
                                 baseS.append(currentList.get(4+j*3));   // baseS means base String
                             }
                             if (siteDepth == 0) {
@@ -582,46 +587,46 @@ class ScanGenotype extends AppAbstract {
     private String getInfoAndGenotypes (List<short[]> siteCountList, AllelePackage[] altAlleles) {
         StringBuilder genoSB = new StringBuilder("GT:AD:GL");
         StringBuilder infoSB = new StringBuilder();
-        int dp = 0;
-        int nz = 0;
-        int alleleNumber = altAlleles.length+1;
-        int[] adCnt = new int[alleleNumber];
-        int[] acCnt = new int[alleleNumber];
-        int[][] gnCnt = new int[alleleNumber][alleleNumber];
-        int ht = 0;
-        for (int i = 0; i < siteCountList.size(); i++) {
-            if (siteCountList.get(i) == null) {
-                nz++;
+        int dp = 0; // DP: Total Depth
+        int nz = 0; // NZ: Number of taxa with called genotypes
+        int alleleNumber = altAlleles.length+1; // includes ref
+        int[] adCnt = new int[alleleNumber];    // AD: Total allelelic depths in order listed starting with REF
+        int[] acCnt = new int[alleleNumber];    // AC: Numbers of allele occurence across taxa in order listed
+        int[][] gnCnt = new int[alleleNumber][alleleNumber];    // GN: Number of taxa with genotypes AA,AB,BB or AA,AB,AC,BB,BC,CC if 2 alt alleles
+        int ht = 0; // HT: Number of heterozygotes
+        for (int i = 0; i < siteCountList.size(); i++) {    // recur for each taxon, including ref
+            if (siteCountList.get(i) == null) { // no variation, therefore not called. but how to decide the depth? the mean depth of alignment? **
+                nz++;   // called genotype is that same as ref? is the number of taxa
                 genoSB.append("\t./.");
                 continue;
             }
             for (int j = 0; j < alleleNumber; j++) {
-                int currentCount = siteCountList.get(i)[j];
-                dp+=currentCount;
+                int currentCount = siteCountList.get(i)[j]; // depth for taxon i and genotype j
+                dp+=currentCount;   // total depth
                 adCnt[j] += currentCount;
             }
-            String genoS = this.getGenotypeByShort(siteCountList.get(i));
+            String genoS = this.getGenotypeByShort(siteCountList.get(i));   // count step for taxa i *
             genoSB.append("\t").append(genoS);
-            int g1 = genoS.charAt(0)-'0';
-            int g2 = genoS.charAt(2)-'0';
+            int g1 = genoS.charAt(0)-'0';   // genotype 1
+            int g2 = genoS.charAt(2)-'0';   // genotype 2
             acCnt[g1]++;
             acCnt[g2]++;
             gnCnt[g1][g2]++;
             if (g1 != g2) ht++;
         }
-        nz = siteCountList.size() - nz;
+        nz = siteCountList.size() - nz; // real NZ?
         int sum = 0;
         for (int i = 0; i < acCnt.length; i++) {
-            sum+=acCnt[i];
+            sum+=acCnt[i];  // sum all the allele count
         }
-        float maf = (float)((double)acCnt[0]/sum);
-        if (maf>0.5) maf = (float)(1-maf);
+        float maf = (float)((double)acCnt[0]/sum);  // choose one and count the frequency
+        if (maf>0.5) maf = (float)(1-maf);  // find the smaller one
         infoSB.append("DP=").append(dp).append(";NZ=").append(nz).append(";AD=");
-        for (int i = 0; i < adCnt.length; i++) {
+        for (int i = 0; i < adCnt.length; i++) {    // for each genotype
             infoSB.append(adCnt[i]).append(",");
         }
         infoSB.deleteCharAt(infoSB.length()-1);
-        infoSB.append(";AC=");
+        infoSB.append(";AC=");  // sum of AC is 2*NZ
         for (int i = 0; i < acCnt.length; i++) {
             infoSB.append(acCnt[i]).append(",");
         }
@@ -631,14 +636,14 @@ class ScanGenotype extends AppAbstract {
             infoSB.append(altAlleles[i].getIndelSeq()).append(",");
         }
         infoSB.deleteCharAt(infoSB.length()-1);
-        infoSB.append(";GN=");
+        infoSB.append(";GN=");  // genotype number, sum of GN is NZ
         for (int i = 0; i < gnCnt.length; i++) {
             for (int j = i; j < gnCnt.length; j++) {
                 infoSB.append(gnCnt[i][j]).append(",");
             }
         }
         infoSB.deleteCharAt(infoSB.length()-1);
-        infoSB.append(";HT=").append(ht).append(";MAF=").append(maf);
+        infoSB.append(";HT=").append(ht).append(";MAF=").append(maf);   // output HT, which is the mid-number at GN
         infoSB.append("\t").append(genoSB);
         return infoSB.toString();
     }
@@ -684,56 +689,61 @@ class ScanGenotype extends AppAbstract {
         return alleleCounts;    // return a int[]
     }
 
-    private String getGenotypeByShort (short[] cnt) {
+    private String getGenotypeByShort (short[] cnt) {   // is for a single taxon
         //in case some allele depth is greater than maxFactorial, to keep the original allele counts
         short[] oriCnt = null;
-        int n = cnt.length*(cnt.length+1)/2;
+        int n = cnt.length*(cnt.length+1)/2;    // for what?
         int[] likelihood = new int[n];
         int sum = 0;
-        for (int i = 0; i < cnt.length; i++) sum+=cnt[i];
-        if (sum == 0) return "./.";
-        else if (sum > this.maxFactorial) {
-            oriCnt = new short[cnt.length];
-            System.arraycopy(cnt, 0, oriCnt, 0, cnt.length);
+        for (int i = 0; i < cnt.length; i++) sum+=cnt[i];   // sum of depths
+        if (sum == 0) return "./."; // no mapped depth. by this do not need to plus the NZ?
+        else if (sum > this.maxFactorial) { // the use of factorial
+            oriCnt = new short[cnt.length]; // faster?
+            System.arraycopy(cnt, 0, oriCnt, 0, cnt.length);    // copy all information to store original allele count information
             double portion = (double)this.maxFactorial/sum;
             for (int i = 0; i < cnt.length; i++) {
-                cnt[i] = (short)(cnt[i]*portion);
+                cnt[i] = (short)(cnt[i]*portion);   // use portion as the number, change cnt
             }
-            sum = this.maxFactorial;
+            sum = this.maxFactorial;    // redefine the sum
         }
-        double coe = this.factorialMap.get(sum);
-        for (int i = 0; i < cnt.length; i++) coe = coe/this.factorialMap.get(cnt[i]);
-        double max = Double.MAX_VALUE;
+        // what is the algorithm??
+        double coe = this.factorialMap.get(sum);    // use factorial for what? count what?
+        for (int i = 0; i < cnt.length; i++) coe = coe/this.factorialMap.get(cnt[i]);   // what is the function? likelihood function? multiple probabilities together?
+        double max = Double.MAX_VALUE;  // for what?
         int a1 = 0;
         int a2 = 0;
-        for (int i = 0; i < cnt.length; i++) {
-            for (int j = i; j < cnt.length; j++) {
-                int index = (j*(j+1)/2)+i;
+        for (int i = 0; i < cnt.length; i++) {  // every allele
+            for (int j = i; j < cnt.length; j++) {  // another allele (including itself)
+                int index = (j*(j+1)/2)+i;  // function?
                 double value = Double.MAX_VALUE;
                 if (i == j) {
                     value = -Math.log10(coe*Math.pow((1-0.75*this.combinedErrorRate), cnt[i])*Math.pow(this.combinedErrorRate /4, (sum-cnt[i])));
+                    // what is the function? and the theory?
+                    // to count the likelihood, so what is the distribution?
                 }
                 else {
                     value = -Math.log10(coe*Math.pow((0.5-this.combinedErrorRate /4), cnt[i]+cnt[j])*Math.pow(this.combinedErrorRate /4, (sum-cnt[i]-cnt[j])));
                 }
-                if (value < max) {
+                if (value < max) {  // get the smallest one (why the minimum?)
                     max = value;
                     a1 = i;
                     a2 = j;
                 }
-                likelihood[index] = (int)Math.round(value);
+                likelihood[index] = (int)Math.round(value); // finish
+                // actually, the memory can store all of these data
             }
         }
         StringBuilder sb = new StringBuilder();
-        sb.append(a1).append("/").append(a2).append(":");
+        sb.append(a1).append("/").append(a2).append(":");   // GT
+        // AD
         if (sum > this.maxFactorial) {
             for (int i = 0; i < oriCnt.length; i++) sb.append(oriCnt[i]).append(",");
         }
         else {
             for (int i = 0; i < cnt.length; i++) sb.append(cnt[i]).append(",");
         }
-        sb.deleteCharAt(sb.length()-1); sb.append(":");
-        for (int i = 0; i < likelihood.length; i++) sb.append(likelihood[i]).append(",");
+        sb.deleteCharAt(sb.length()-1); sb.append(":"); // separator
+        for (int i = 0; i < likelihood.length; i++) sb.append(likelihood[i]).append(",");   // likelihood
         sb.deleteCharAt(sb.length()-1);
         return sb.toString();
     }
@@ -771,7 +781,7 @@ class ScanGenotype extends AppAbstract {
 
     private void creatFactorialMap () {
         this.factorialMap = HashIntDoubleMaps.getDefaultFactory().newMutableMap();  // why factorial? is the factorial like x!
-        for (int i = 0; i < this.maxFactorial+1; i++) {
+        for (int i = 0; i < this.maxFactorial+1; i++) { // from 0 to 150
             this.factorialMap.put(i, factorial(i)); // longFactorials = new long[]{1L, 1L, 2L, 6L, 24L, 120L...
             // why use factorial map?
         }
@@ -807,7 +817,7 @@ class ScanGenotype extends AppAbstract {
                 Arrays.sort(bams);
                 List<String> bamList = Arrays.asList(bams); // Array -> List, transfer from bams
                 taxaBamsMap.put(tem[0], bamList);
-                taxaCoverageMap.put(tem[0], Double.valueOf(tem[1]));
+                taxaCoverageMap.put(tem[0], Double.valueOf(tem[1]));    // no usage?
                 nBam+=bams.length;  // why not directly use pathList's length?
             }
             taxaNames = taxaList.toArray(new String[taxaList.size()]);  // List -> Array

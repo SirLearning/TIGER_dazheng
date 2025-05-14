@@ -28,12 +28,12 @@ public class IndividualCount implements Comparable<IndividualCount> {
             this.binStart = dis.readInt();
             this.binEnd = dis.readInt();
             int positionNum = dis.readInt();
-            alleleNum = new byte[positionNum];
-            alleleCounts = new short[positionNum][];
+            alleleNum = new byte[positionNum];  // create a byte for every position
+            alleleCounts = new short[positionNum][];    // why not define the second dimension
             for (int i = 0; i < positionNum; i++) {
-                alleleNum[i] = dis.readByte();
-                if (alleleNum[i] < 0) continue;
-                alleleCounts[i] = new short[alleleNum[i]];
+                alleleNum[i] = dis.readByte();  // the allelePack number at this position, including ref
+                if (alleleNum[i] < 0) continue; // missing mpileup
+                alleleCounts[i] = new short[alleleNum[i]];  // the second dimension is changeable, and the number includes ref
                 for (int j = 0; j < alleleNum[i]; j++) {
                     alleleCounts[i][j] = dis.readShort();
                 }
