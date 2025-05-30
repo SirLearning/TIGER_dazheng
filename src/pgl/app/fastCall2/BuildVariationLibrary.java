@@ -163,7 +163,7 @@ class BuildVariationLibrary extends AppAbstract {
         File f = new File (vLibDirS);
         f.mkdir();
         sb.setLength(0);
-        sb.append(chrom).append("_").append(this.regionStart).append("_").append(regionEnd).append(".lib.gz");
+        sb.append(chrom).append("_").append(this.regionStart).append("_").append(regionEnd).append(".lib.gz");  // every chromosome bin store a .lib file
         chromVl.writeBinaryFileS(new File (f, sb.toString()).getAbsolutePath());    // the format of .lib file.
         System.out.println("Building genetic variation library is finished.");
     }

@@ -55,20 +55,19 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
     }
 
     private void mergeIngs (List<IndividualGenotype> ingList, int maoThresh, int maxAltNum) {
-        IntOpenHashSet positionSet = new IntOpenHashSet();  // what is IntOpenHashSet? hashset is a set constructed in the hash way; but why it is open?
+        IntOpenHashSet positionSet = new IntOpenHashSet();  // hashset is a set constructed in the hash way; but why it is open?
         for (int i = 0; i < ingList.size(); i++) {
             int positionNumber = ingList.get(i).getPositionNumber();    // how many allele positions this individual has
             for (int j = 0; j < positionNumber; j++) {
                 positionSet.add(ingList.get(i).getAlleleChromPosition(j));  // the position is on the chromosome level, return an int
-                // the set means no repeat value?
             }
         }
-        potentialPositions = positionSet.toIntArray();  // allele positions, from a set (no repeat?) to int[]
+        potentialPositions = positionSet.toIntArray();  // allele positions, from a set (no repeat) to int[]
         // the reason why these positions are potential is might that final allele positions will be filtered by threshold.
         Arrays.sort(potentialPositions);    // sort method for int[]
         potentialAllelePackLists = new ArrayList[potentialPositions.length];    // the arrayList's list number is based on position number
         for (int i = 0; i < potentialPositions.length; i++) {
-            potentialAllelePackLists[i] = new ArrayList<>();    // why ArrayList? what is the use of ArrayList? is it the parent of every List class?
+            potentialAllelePackLists[i] = new ArrayList<>();    // ArrayList is addable
             // every potential position has a allelePackList
         }
         for (int i = 0; i < ingList.size(); i++) {
@@ -85,19 +84,18 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
         // use AllelePackage as the data storage instance as it can store allelePack (int[]) and make list
         // dimension 1: every potential position has one;
         // dimension 2: maxAltNum = 2, means there are only 2 alternative allele at one position
-        int[][] altCounts = new int[potentialPositions.length][maxAltNum];  // to count what? the individual (diploid) number of different alternative allele?
-        // but is there a raw dataset to record maybe the all 4 allele? which is possible to happen
+        int[][] altCounts = new int[potentialPositions.length][maxAltNum];  // to count the individual (diploid) number of different alternative allele (maximum is 2, means 3 alleles at one position)
         for (int i = 0; i < potentialPositions.length; i++) {
-            indexList.add(i);   // the reason why not use array like int[]? because array cannot expand length and cannot use methods in ArrayList.
+            indexList.add(i);   // array cannot expand length and cannot use methods in ArrayList.
         }
         indexList.parallelStream().forEach(i -> {   // learn more about the lambda method...
-            Set<AllelePackage> alleleSet = new HashSet<>(); // the reason why AllelePackage implements Comparable? as set cannot have same members.
+            Set<AllelePackage> alleleSet = new HashSet<>(); // As set cannot have same members, AllelePackage implements Comparable
             for (int j = 0; j < potentialAllelePackLists[i].size(); j++) {
                 alleleSet.add(potentialAllelePackLists[i].get(j));  // add allelePacks at this potential position (i) to alleleSet
             }
-            AllelePackage[] alleles = alleleSet.toArray(new AllelePackage[alleleSet.size()]);   // why AllelePackage can also be used as array?
+            AllelePackage[] alleles = alleleSet.toArray(new AllelePackage[alleleSet.size()]);   // AllelePackage can also be used as array. Array can be used for class.
             Arrays.sort(alleles);   // array can use methods in Arrays class to do things like sort.
-            int[] alleleCount = new int[alleles.length];    // why alleleCount have the length of AllelePackages number?
+            int[] alleleCount = new int[alleles.length];    // alleleCount length: AllelePackages number (alternative allele number at this position)
             int index = Integer.MIN_VALUE;
             for (int j = 0; j < potentialAllelePackLists[i].size(); j++) {
                 index = Arrays.binarySearch(alleles, potentialAllelePackLists[i].get(j));   // find the same allelePack's index
@@ -105,16 +103,16 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             }
             int[] countIndex = PArrayUtils.getIndicesByDescendingValue(alleleCount);    // get index order with alleleCount from big to small.
             int minNum = alleles.length;
-            if (minNum > maxAltNum) minNum = maxAltNum; // there is only 2 alternative allele at maximum, also have more options (like 3, 4... in the future?)
+            if (minNum > maxAltNum) minNum = maxAltNum; // there is only 2 alternative allele at maximum, adding ref is 3, enough. Usually in .vcf file, there are 2 kinds of variation position format for each sample.
             for (int j = 0; j < minNum; j++) {  // record to AllelePackage[][] and int[][]
                 alts[i][j] = alleles[countIndex[j]];
                 altCounts[i][j] = alleleCount[countIndex[j]];
             }
         });
         IntArrayList positionList = new IntArrayList(); // length is changeable.
-        List<AllelePackage[]> allelePackLists = new ArrayList<AllelePackage[]>();   // to store allelePackList below?
+        List<AllelePackage[]> allelePackLists = new ArrayList<AllelePackage[]>();   // to store allelePackList and transfer to VariationLibrary
         List<AllelePackage> allelePackList = new ArrayList<>();
-        for (int i = 0; i < alts.length; i++) { // what the length is? position number?
+        for (int i = 0; i < alts.length; i++) { // for each potential position
             int varifiedNum = maxAltNum;    // means 2 at maximum.
             for (int j = maxAltNum; j > 0; j--) {
                 if (altCounts[i][j-1] < maoThresh) varifiedNum--;   // check the minor allele occurrence (if < 2, abandon this allele)
@@ -130,6 +128,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
         this.positions = positionList.toIntArray();
         this.allelePacks = allelePackLists.toArray(new AllelePackage[allelePackLists.size()][]);
         // why not record numbers for each alternative allele?
+        // this method only get a unified position list and its relative allele, regardless of samples.
     }
 
     public AllelePackage[] getAllelePacks (int positionIndex) {

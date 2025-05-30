@@ -371,6 +371,7 @@ class DiscoverVariation extends AppAbstract {
         }
 
         public void setDos () {
+            System.out.println("debug2");
             int binIndex = Arrays.binarySearch(binStarts, this.currentPos); // bin的size固定，但是读取出的samtools mpileup并不是每个位点都输出，让每个并行处理的文件都对上
             if (binIndex < 0) binIndex = -binIndex-2;   // what is the meaning? (low-1) 二分搜索，要先排序，然后返回 (-low-1)
             if (binIndex != currentBinIndex) {
@@ -382,6 +383,7 @@ class DiscoverVariation extends AppAbstract {
                 String outfileS = new File (outDir, sb.toString()).getAbsolutePath();
 //                System.out.println(outfileS);
                 dos = IOUtils.getBinaryGzipWriter(outfileS);
+                System.out.println("Individual genotype is in the file:" + dos.toString() + "\t" + outfileS);  // edited by Da
                 try {
                     dos.writeUTF(this.taxon);
                     dos.writeShort((short)chrom);
@@ -418,7 +420,11 @@ class DiscoverVariation extends AppAbstract {
                 String temp = null;
                 BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));  // 直接在内存中传输数据
                 while ((temp = br.readLine()) != null) {
-                    if(!this.processPileupLine(temp)) continue;
+                    System.out.println("debug1:\t" + temp);
+                    if(!this.processPileupLine(temp))  {
+                        System.out.println(temp);
+                        continue;
+                    }
                     this.writeVariants();   // how to use pool to output?
                 }
                 this.closeDos();
