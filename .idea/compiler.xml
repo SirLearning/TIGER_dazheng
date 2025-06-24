@@ -9,7 +9,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="TIGER_Da" />
+        <module name="debugFastCall2" />
       </profile>
     </annotationProcessing>
   </component>
