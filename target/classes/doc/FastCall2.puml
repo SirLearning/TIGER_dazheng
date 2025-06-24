@@ -1,0 +1,61 @@
+@startuml
+class pgl.app.fastCall2.VariationLibrary {
+}
+class pgl.app.fastCall2.BuildVariationLibrary {
+}
+class pgl.app.fastCall2.BuildVariationLibrary$TaxonRead {
+}
+class pgl.app.fastCall2.IndividualCount {
+}
+class pgl.app.fastCall2.IndividualGenotype {
+}
+enum pgl.AppNames {
++  FastCall
++  FastCall2
++  HapScanner
++  PopDep
+}
+
+class pgl.app.fastCall2.ViewVariationLibrary {
+}
+class pgl.app.fastCall2.ScanGenotype {
+}
+class pgl.app.fastCall2.ScanGenotype$TaxonCountRead {
+}
+class pgl.app.fastCall2.ScanGenotype$IndiCount {
+}
+abstract class pgl.AppAbstract {
+}
+class pgl.app.fastCall2.FastCall2 {
+}
+class pgl.app.fastCall2.AllelePackage {
+}
+class pgl.app.fastCall2.CustomizeVariationLibrary {
+}
+class pgl.app.fastCall2.DiscoverVariation {
+}
+class pgl.app.fastCall2.DiscoverVariation$TaxonCall {
+}
+interface pgl.AppInterface {
+}
+
+
+java.lang.Comparable <|.. pgl.app.fastCall2.VariationLibrary
+pgl.AppAbstract <|-- pgl.app.fastCall2.BuildVariationLibrary
+pgl.app.fastCall2.BuildVariationLibrary +.. pgl.app.fastCall2.BuildVariationLibrary$TaxonRead
+java.util.concurrent.Callable <|.. pgl.app.fastCall2.BuildVariationLibrary$TaxonRead
+java.lang.Comparable <|.. pgl.app.fastCall2.IndividualCount
+java.lang.Comparable <|.. pgl.app.fastCall2.IndividualGenotype
+pgl.AppAbstract <|-- pgl.app.fastCall2.ViewVariationLibrary
+pgl.AppAbstract <|-- pgl.app.fastCall2.ScanGenotype
+pgl.app.fastCall2.ScanGenotype +.. pgl.app.fastCall2.ScanGenotype$TaxonCountRead
+java.util.concurrent.Callable <|.. pgl.app.fastCall2.ScanGenotype$TaxonCountRead
+pgl.app.fastCall2.ScanGenotype +.. pgl.app.fastCall2.ScanGenotype$IndiCount
+java.util.concurrent.Callable <|.. pgl.app.fastCall2.ScanGenotype$IndiCount
+pgl.AppInterface <|.. pgl.AppAbstract
+java.lang.Comparable <|.. pgl.app.fastCall2.AllelePackage
+pgl.AppAbstract <|-- pgl.app.fastCall2.CustomizeVariationLibrary
+pgl.AppAbstract <|-- pgl.app.fastCall2.DiscoverVariation
+pgl.app.fastCall2.DiscoverVariation +.. pgl.app.fastCall2.DiscoverVariation$TaxonCall
+java.util.concurrent.Callable <|.. pgl.app.fastCall2.DiscoverVariation$TaxonCall
+@enduml

@@ -1,0 +1,145 @@
+@startuml
+enum pgl.infra.dna.genot.GenoIOFormat {
++  VCF
++  VCF_GZ
++  Binary
++  Binary_GZ
++  HDF5
+}
+
+abstract class pgl.infra.dna.FastaAbstract {
+}
+enum pgl.infra.dna.sortType {
++  byName
++  byNameValue
++  byID
++  byLengthAscending
++  byLengthDescending
+}
+
+class pgl.infra.dna.FastaAbstract$sortByID {
+}
+class pgl.infra.dna.FastaAbstract$sortByDescription {
+}
+class pgl.infra.dna.FastaAbstract$sortByDescriptionValue {
+}
+class pgl.infra.dna.FastaAbstract$sortByLengthAscending {
+}
+class pgl.infra.dna.FastaAbstract$sortByLengthDescending {
+}
+class pgl.infra.dna.genot.GenotypeGrid {
+}
+enum pgl.infra.dna.genot.GridDirection {
++  BySite
++  ByTaxon
+}
+
+class pgl.infra.dna.allele.Allele {
+}
+class pgl.infra.dna.snp.SNPOld {
+}
+class pgl.infra.dna.Sequence3Bit {
+}
+class pgl.infra.dna.genot.VCFUtils {
+}
+class pgl.infra.dna.genot.summa.SumTaxaDivergence {
+}
+class pgl.infra.dna.genot.GenotypeOperation {
+}
+enum pgl.infra.dna.allele.AlleleType {
++  Reference
++  Alternative
++  Alternative2
++  Major
++  Minor
++  Minor2
++  Ancestral
++  Derived
+}
+
+class pgl.infra.dna.Fastq {
+}
+class pgl.infra.dna.FastaRecordByte {
+}
+class pgl.infra.dna.FastaRecordBit {
+}
+class pgl.infra.dna.Read {
+}
+interface pgl.infra.dna.FastaRecordInterface {
+}
+interface pgl.infra.dna.genot.GenotypeTable {
+}
+interface pgl.infra.dna.SequenceInterface {
+}
+interface pgl.infra.dna.FastaInterface {
+}
+class pgl.infra.dna.SequenceByte {
+}
+class pgl.infra.dna.BaseEncoder {
+}
+class pgl.infra.dna.genot.GenotypeExport {
+}
+class pgl.infra.dna.SequenceUtils {
+}
+class pgl.infra.dna.FastaBit {
+}
+class pgl.infra.dna.genot.GenoSiteBlockBinary {
+}
+class pgl.infra.dna.genot.GenotypeRows {
+}
+class pgl.infra.dna.genot.GenotypeRows$SGBBlockBinary {
+}
+class pgl.infra.dna.genot.GenotypeRows$SGBBlockVCF {
+}
+class pgl.infra.dna.allele.AlleleEncoder {
+}
+interface pgl.infra.dna.snp.SNPOldInterface {
+}
+class pgl.infra.dna.genot.GenoSiteBlockVCF {
+}
+class pgl.infra.dna.snp.BiSNP {
+}
+class pgl.infra.dna.FastaByte {
+}
+class pgl.infra.dna.genot.SiteGenotype {
+}
+class pgl.infra.dna.genot.SiteVCF {
+}
+
+
+pgl.infra.dna.FastaInterface <|.. pgl.infra.dna.FastaAbstract
+pgl.infra.dna.FastaAbstract +.. pgl.infra.dna.FastaAbstract$sortByID
+pgl.infra.dna.Comparator <|.. pgl.infra.dna.FastaAbstract$sortByID
+pgl.infra.dna.FastaAbstract +.. pgl.infra.dna.FastaAbstract$sortByDescription
+pgl.infra.dna.Comparator <|.. pgl.infra.dna.FastaAbstract$sortByDescription
+pgl.infra.dna.FastaAbstract +.. pgl.infra.dna.FastaAbstract$sortByDescriptionValue
+pgl.infra.dna.Comparator <|.. pgl.infra.dna.FastaAbstract$sortByDescriptionValue
+pgl.infra.dna.FastaAbstract +.. pgl.infra.dna.FastaAbstract$sortByLengthAscending
+pgl.infra.dna.Comparator <|.. pgl.infra.dna.FastaAbstract$sortByLengthAscending
+pgl.infra.dna.FastaAbstract +.. pgl.infra.dna.FastaAbstract$sortByLengthDescending
+pgl.infra.dna.Comparator <|.. pgl.infra.dna.FastaAbstract$sortByLengthDescending
+pgl.infra.dna.genot.GenotypeTable <|.. pgl.infra.dna.genot.GenotypeGrid
+cern.colt.Swapper <|.. pgl.infra.dna.genot.GenotypeGrid
+cern.colt.function.IntComparator <|.. pgl.infra.dna.genot.GenotypeGrid
+pgl.infra.dna.snp.SNPOldInterface <|.. pgl.infra.dna.snp.SNPOld
+pgl.infra.pos.ChrPos <|-- pgl.infra.dna.snp.SNPOld
+pgl.infra.dna.SequenceInterface <|.. pgl.infra.dna.Sequence3Bit
+pgl.infra.dna.FastaRecordInterface <|.. pgl.infra.dna.FastaRecordByte
+pgl.infra.dna.SequenceByte <|-- pgl.infra.dna.FastaRecordByte
+pgl.infra.dna.FastaRecordInterface <|.. pgl.infra.dna.FastaRecordBit
+pgl.infra.dna.Sequence3Bit <|-- pgl.infra.dna.FastaRecordBit
+pgl.infra.dna.SequenceByte <|-- pgl.infra.dna.Read
+pgl.infra.dna.SequenceInterface <|-- pgl.infra.dna.FastaRecordInterface
+pgl.infra.dna.SequenceInterface <|.. pgl.infra.dna.SequenceByte
+pgl.infra.dna.FastaAbstract <|-- pgl.infra.dna.FastaBit
+java.util.concurrent.Callable <|.. pgl.infra.dna.genot.GenoSiteBlockBinary
+pgl.infra.dna.genot.GenotypeTable <|.. pgl.infra.dna.genot.GenotypeRows
+pgl.infra.dna.genot.GenotypeRows +.. pgl.infra.dna.genot.GenotypeRows$SGBBlockBinary
+pgl.infra.dna.genot.Callable <|.. pgl.infra.dna.genot.GenotypeRows$SGBBlockBinary
+pgl.infra.dna.genot.GenotypeRows +.. pgl.infra.dna.genot.GenotypeRows$SGBBlockVCF
+pgl.infra.dna.genot.Callable <|.. pgl.infra.dna.genot.GenotypeRows$SGBBlockVCF
+java.util.concurrent.Callable <|.. pgl.infra.dna.genot.GenoSiteBlockVCF
+pgl.infra.pos.ChrPos <|-- pgl.infra.dna.snp.BiSNP
+pgl.infra.dna.FastaAbstract <|-- pgl.infra.dna.FastaByte
+pgl.infra.dna.snp.BiSNP <|-- pgl.infra.dna.genot.SiteGenotype
+@enduml

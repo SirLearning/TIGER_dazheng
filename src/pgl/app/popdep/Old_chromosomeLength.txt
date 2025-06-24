@@ -1,2 +1,0 @@
-Chromosome(Should be all choromosomes)	Length
-1	1000000

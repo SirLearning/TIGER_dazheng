@@ -1,0 +1,297 @@
+@startuml
+interface pgl.infra.dna.SequenceInterface {
++ int getSequenceLength()
++ double getProportionA()
++ double getProportionT()
++ double getProportionG()
++ double getProportionC()
++ double getGCContent()
++ char getBase(int)
++ String getSequence()
++ String getSequence(int,int)
++ SequenceInterface getSequenceInterface(int,int)
++ String getReverseComplementarySeq()
++ String getReverseComplementarySeq(int,int)
++ boolean isThereN()
+}
+
+interface pgl.infra.dna.FastaInterface {
++ void readFasta(String,IOFileFormat)
++ void writeFasta(String,boolean[],IOFileFormat)
++ void writeFasta(String,int,IOFileFormat)
++ void writeFasta(String,IOFileFormat)
++ int getN50()
++ int getL50()
++ long getTotalSeqLength()
++ int getSeqNumber()
++ int getIndexByDescription(String)
++ int getSeqLength(int)
++ String[] getDescriptions()
++ String getDescription(int)
++ String getSeq(int)
++ String getSeq(int,int,int)
++ FastaRecordInterface getFastaRecord(int)
++ void setDescription(String,int)
++ void sortByDescription()
++ void sortByDescriptionValue()
++ void sortByID()
++ void sortByLengthAscending()
++ void sortByLengthDescending()
++ boolean isThereN()
+}
+
+class pgl.infra.dna.SequenceByte {
+~ byte[] seqAscII
++ int getSequenceLength()
++ double getProportionA()
++ double getProportionT()
++ double getProportionG()
++ double getProportionC()
++ double getGCContent()
++ char getBase(int)
++ byte getBaseAscII(int)
++ String getSequence()
++ String getSequence(int,int)
++ SequenceInterface getSequenceInterface(int,int)
++ SequenceByte getSequenceByte(int,int)
++ String getReverseComplementarySeq()
++ String getReverseComplementarySeq(int,int)
++ boolean isThereN()
++ boolean isThereNonACGTNBase()
+}
+
+
+abstract class pgl.infra.dna.FastaAbstract {
+~ FastaRecordInterface[] records
+~ sortType sType
++ void writeFasta(String,boolean[],IOFileFormat)
++ void writeFasta(String,int,IOFileFormat)
++ void writeFasta(String,IOFileFormat)
++ void writeFastaByChr(String,IOFileFormat,String,String)
++ int getN50()
++ int getL50()
++ long getTotalSeqLength()
++ int getSeqNumber()
++ int getSeqLength(int)
++ String[] getDescriptions()
++ String getDescription(int)
++ String getSeq(int)
++ FastaRecordInterface getFastaRecord(int)
++ String getSeq(int,int,int)
++ void setDescription(String,int)
++ void sortByDescription()
++ void sortByDescriptionValue()
++ void sortByID()
++ void sortByLengthAscending()
++ void sortByLengthDescending()
++ boolean isThereN()
+}
+
+
+enum pgl.infra.dna.sortType {
++  byName
++  byNameValue
++  byID
++  byLengthAscending
++  byLengthDescending
+}
+
+class pgl.infra.dna.FastaAbstract$sortByID {
++ int compare(FastaRecordInterface,FastaRecordInterface)
+}
+
+class pgl.infra.dna.FastaAbstract$sortByDescription {
++ int compare(FastaRecordInterface,FastaRecordInterface)
+}
+
+class pgl.infra.dna.FastaAbstract$sortByDescriptionValue {
++ int compare(FastaRecordInterface,FastaRecordInterface)
+}
+
+class pgl.infra.dna.FastaAbstract$sortByLengthAscending {
++ int compare(FastaRecordInterface,FastaRecordInterface)
+}
+
+class pgl.infra.dna.FastaAbstract$sortByLengthDescending {
++ int compare(FastaRecordInterface,FastaRecordInterface)
+}
+
+class pgl.infra.dna.BaseEncoder {
++ {static} int longChunkSize
++ {static} int intChunkSize
++ {static} int shortChunkSize
++ {static} char[] bases
++ {static} byte[] baseAscIIs
++ {static} byte[] baseCodings
++ {static} HashByteByteMap ascIIBaseCodingMap
++ {static} HashByteByteMap getAscIIBaseCodingMap()
++ {static} byte[] convertAscIIToBaseCodingArray(byte[])
++ {static} byte convertAscIIToBaseCoding(byte)
++ {static} byte[] getReverseComplementary(byte[])
++ {static} long getLongSeqFromBaseCodingArray(byte[])
++ {static} long getLongFromSubBaseCodingArray(byte[],int,int)
++ {static} int[] getIntsFromLongs(long[])
++ {static} int[] getIntsFromLong(long)
++ {static} int getIntFromBaseCodingArray(byte[])
++ {static} int getIntSeqFromSubBaseCodingArray(byte[],int,int)
++ {static} short getShortFromBaseCodingArray(byte[])
++ {static} short getShortFromSubByteArray(byte[],int,int)
++ {static} long getLongReverseComplement(long,int)
++ {static} int getIntReverseComplement(int,int)
++ {static} short getShortReverseComplement(int,int)
++ {static} byte getSeqDifferences(long,long,int)
++ {static} byte getSeqDifferences(long,long)
++ {static} String getSequenceFromLongs(long[])
+- {static} void extendSequenceFromLong(long,StringBuilder)
++ {static} String getSequenceFromLong(long)
++ {static} String getSequenceFromInts(int[])
+- {static} void extendSequenceFromInt(int,StringBuilder)
++ {static} String getSequenceFromInt(int)
++ {static} String getSequenceFromShort(int)
++ {static} byte[] getBaseCodingArrayFromLong(long)
++ {static} byte[] getBaseCodingArrayFromLongs(long[])
+}
+
+
+class pgl.infra.dna.SequenceUtils {
+- {static} byte[] baseAscIIWithN
+- {static} byte[] compleBaseAscIIWithN
++ {static} HashByteByteMap getBaseCompleAscIIMap()
++ {static} byte[] getBaseAscIIArray()
++ {static} byte[] getBaseWithNAscIIArray()
+}
+
+
+class pgl.infra.dna.Sequence3Bit {
+# {static} HashByteByteMap ascIIBaseCodingMap
+# {static} HashByteByteMap baseCodingAscIIMap
+~ BitSet seqS
+~ int sequenceLength
+# int wordSize
+- void initialize(String)
+# void setBaseCoding(int,byte)
+- {static} HashByteByteMap buildAscIIByteMap()
+- {static} HashByteByteMap buildByteAscIIMap()
++ int getSequenceLength()
++ double getProportionA()
++ double getProportionT()
++ double getProportionG()
++ double getProportionC()
++ double getGCContent()
++ char getBase(int)
+# byte getBaseAscII(int)
+# byte getBaseCoding(int)
+# void printBits()
++ String getSequence()
++ String getSequence(int,int)
++ SequenceInterface getSequenceInterface(int,int)
++ Sequence3Bit getSequence3Bit(int,int)
+# byte[] getSequenceAscII(int,int)
++ String getReverseComplementarySeq()
++ String getReverseComplementarySeq(int,int)
++ boolean isThereN()
+}
+
+
+class pgl.infra.dna.FastaBit {
++ void readFasta(String,IOFileFormat)
++ int getIndexByDescription(String)
++ FastaRecordBit getFastaRecordBit(int)
++ FastaRecordBit getFastaRecordBit(int,int,int)
+}
+
+class pgl.infra.dna.Fastq {
+- int minStartIndex
+- int maxReadNum
+~ Read[] reads
+~ int phredScale
++ int getPhredScale()
+- void readFastq(String,IOFileFormat)
+- void readFastq(String,IOFileFormat,int,int)
+- void setPhredScale(BufferedReader,int)
+- void readFastq(BufferedReader)
+- void readFastq(BufferedReader,int,int)
++ void writeFastq(String,IOFileFormat)
++ void writeFasta(String)
++ void writeFasta(String,boolean[])
++ Read getRead(int)
++ int getReadNum()
+}
+
+
+class pgl.infra.dna.FastaRecordByte {
+~ String description
+~ int id
++ String getDescription()
++ int getID()
++ void setDescription(String)
++ void setID(int)
+}
+
+
+class pgl.infra.dna.FastaRecordBit {
+~ String description
+~ int id
++ String getDescription()
++ int getID()
++ void setDescription(String)
++ void setID(int)
+}
+
+
+class pgl.infra.dna.Read {
+~ String ID
+~ String des
+~ byte[] qualValue
+~ byte[] sortedQualValue
+- void calibrateQualValue(int)
++ byte returnMeanQuality()
++ byte getMedianQuality(int)
++ byte getBaseQuality(int)
++ String getDescription()
++ String getID()
++ String getReverseQual(int)
++ String getQualS(int)
++ String getQualS(int,int,int)
+}
+
+
+class pgl.infra.dna.FastaByte {
++ void readFasta(String,IOFileFormat)
++ int getIndexByDescription(String)
++ boolean isThereNonACGTNBase()
++ FastaRecordByte getFastaRecordByte(int)
++ FastaRecordByte getFastaRecordByte(int,int,int)
+}
+
+interface pgl.infra.dna.FastaRecordInterface {
++ String getDescription()
++ int getID()
++ void setDescription(String)
++ void setID(int)
+}
+
+
+
+pgl.infra.dna.SequenceInterface <|.. pgl.infra.dna.SequenceByte
+pgl.infra.dna.FastaInterface <|.. pgl.infra.dna.FastaAbstract
+pgl.infra.dna.FastaAbstract +.. pgl.infra.dna.FastaAbstract$sortByID
+pgl.infra.dna.Comparator <|.. pgl.infra.dna.FastaAbstract$sortByID
+pgl.infra.dna.FastaAbstract +.. pgl.infra.dna.FastaAbstract$sortByDescription
+pgl.infra.dna.Comparator <|.. pgl.infra.dna.FastaAbstract$sortByDescription
+pgl.infra.dna.FastaAbstract +.. pgl.infra.dna.FastaAbstract$sortByDescriptionValue
+pgl.infra.dna.Comparator <|.. pgl.infra.dna.FastaAbstract$sortByDescriptionValue
+pgl.infra.dna.FastaAbstract +.. pgl.infra.dna.FastaAbstract$sortByLengthAscending
+pgl.infra.dna.Comparator <|.. pgl.infra.dna.FastaAbstract$sortByLengthAscending
+pgl.infra.dna.FastaAbstract +.. pgl.infra.dna.FastaAbstract$sortByLengthDescending
+pgl.infra.dna.Comparator <|.. pgl.infra.dna.FastaAbstract$sortByLengthDescending
+pgl.infra.dna.SequenceInterface <|.. pgl.infra.dna.Sequence3Bit
+pgl.infra.dna.FastaAbstract <|-- pgl.infra.dna.FastaBit
+pgl.infra.dna.FastaRecordInterface <|.. pgl.infra.dna.FastaRecordByte
+pgl.infra.dna.SequenceByte <|-- pgl.infra.dna.FastaRecordByte
+pgl.infra.dna.FastaRecordInterface <|.. pgl.infra.dna.FastaRecordBit
+pgl.infra.dna.Sequence3Bit <|-- pgl.infra.dna.FastaRecordBit
+pgl.infra.dna.SequenceByte <|-- pgl.infra.dna.Read
+pgl.infra.dna.FastaAbstract <|-- pgl.infra.dna.FastaByte
+pgl.infra.dna.SequenceInterface <|-- pgl.infra.dna.FastaRecordInterface
+@enduml

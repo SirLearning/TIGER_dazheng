@@ -1,0 +1,129 @@
+@startuml AncestryPipeline
+skinparam monochrome true
+skinparam nodesep 50
+skinparam ranksep 50
+
+title Ancestry Pipeline Flowchart
+
+start
+
+:Data Preparation;
+note right
+  Merge datasets:
+  - POBI (2039 British samples)
+  - Busby et al. (511 European)
+  - POPRES (4077 samples)
+  - HGDP (1035 worldwide)
+  - Hapmap (996 samples)
+  - Pagani et al. (139 African)
+  - Peterson et al. (103)
+  - Schlebush et al. (189)
+  Total: 9129 samples
+end note
+
+:Create union SNP list (2,011,414 SNPs);
+:Relatedness pruning (PLINK)\n-> 7775 individuals;
+
+partition "Phasing & Imputation" {
+  :Phasing (SHAPEIT2);
+  :Imputation (IMPUTE4)\nusing UK10K + 1000G;
+  :Filter to 851,948 high-quality SNPs;
+  :                                                                                 ;
+}
+
+:Chromosome Painting\n(ChromoPainter v2);
+note right
+  Per-category painting:
+  - GB, Europe, Africa, World
+  Added European/African donors
+  for World panel
+end note
+
+:Remove cryptically related individuals;
+note right
+  Genome fraction limits:
+  - GB: 0.035
+  - Europe: 0.035
+  - Africa: 0.06
+  - World: 0.05
+  Final counts:
+  - GB: 2148
+  - Europe: 2912
+  - Africa: 778
+  - World: 1700
+end note
+
+partition "Donor/Surrogate Groups" {
+  :Form initial groups with >50% ancestry;
+  repeat
+    :Split groups using MCLUST\n(max 5 clusters);
+    :Move individuals to preferred groups;
+    :Remove small groups (< size threshold);
+    :Check relative inclusion;
+  repeat while (Convergence?) -> (2 iterations)
+  :Handle special cases:
+  Native American pairs,
+  Lahu/Melanesia, San/Mbuti;
+  :                                                                                              ;
+}
+
+:Final group counts;
+note right
+  Surrogates: 6632
+  - GB: 1743
+  - Europe: 2648
+  - Africa: 752
+  - World: 1489
+
+  Donors: 6683
+  - GB: 1743
+  - Europe: 2672
+  - Africa: 842
+  - World: 1426
+end note
+
+:SNP quality control;
+note right
+  - Remove SNPs with >0.2% mismatch rate
+  - Check bias using SGDP/EGDP/OpenSNP
+  - Remove SNPs with >1% imputation discordance
+  Final panel: 677,173 SNPs
+end note
+
+:Final Painting Panel (677,173 SNPs);
+:Repeat chromosome painting\nwith new donor set;
+:Repeat admixture analysis\nwith updated groupings;
+
+partition "Final Group Refinement" {
+  :Perform final iteration of steps b-c;
+  note right
+    b) Move individuals to preferred groups (>50% ancestry)
+    c) Remove small surrogate groups below size threshold
+  end note
+  :Ensure group robustness\nto donor set choice;
+  :                                                                                                ;
+}
+
+partition "UK Biobank Processing" {
+  :Identify UK Biobank individuals\nin poorly captured regions;
+  :                                                                                         ;
+  :Check ethnicity match\nand cluster strength (>50% recovery);
+  :Create surrogate vectors for qualifying groups;
+  note right
+    Constructed for typical ancestry from:
+    - European countries (Netherlands, Denmark...)
+    - African countries (Algeria, Egypt, Ghana...)
+    - Asian countries (Nepal, Vietnam, Philippines...)
+    (Total 36 additional regions)
+  end note
+}
+
+:Combine 206 surrogate groups\ninto 127 interpretable labels;
+note right
+  Reporting simplification:
+  - Merge groups without clear labels
+  - Final ancestry labels for results
+end note
+
+stop
+@enduml
