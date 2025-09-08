@@ -53,7 +53,14 @@ public class FastCall2 {
         }
         else if (currentTool.equals("scan")) {
             System.out.println("Genotyping samples based on the variation library...");
-            new ScanGenotype(args);
+            // Check if GPU optimization is enabled
+            boolean useGPU = checkGPUOption(args);
+            if (useGPU) {
+                System.out.println("GPU heterogeneous optimization mode enabled");
+                new ScanGenotypeGPU(args);
+            } else {
+                new ScanGenotype(args);
+            }
         }
         else {
             System.out.println("Input errors in setting steps of FastCall 2. Programs stops.");
@@ -63,6 +70,20 @@ public class FastCall2 {
         sb.append((float)Benchmark.getTimeSpanHours(timeStart)).append(" hours.");
         System.out.println(sb.toString());
         System.out.println();
+    }
+
+    /**
+     * Check if GPU optimization is enabled in command line arguments
+     */
+    private boolean checkGPUOption(String[] args) {
+        for (int i = 0; i < args.length - 1; i++) {
+            if (args[i].equals("-gpu") || args[i].equals("--gpu")) {
+                String value = args[i + 1].toLowerCase();
+                return value.equals("true") || value.equals("1") || value.equals("enable");
+            }
+        }
+        // Enable GPU by default (if available)
+        return true;
     }
 
     static Dyad<int[][], int[]> getBins (int regionStart, int regionEnd, int binSize) {

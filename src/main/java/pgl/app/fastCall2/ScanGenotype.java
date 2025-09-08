@@ -58,7 +58,7 @@ class ScanGenotype extends AppAbstract {
     String[] taxaNames = null;
 
     IntDoubleMap factorialMap = null;
-    int maxFactorial = 150; // why 150? and is used for what? short reads alignment? 150 is not a factorial?
+    int maxFactorial = 150; // 150x?
 
     String vLibPosFileS = null;
 

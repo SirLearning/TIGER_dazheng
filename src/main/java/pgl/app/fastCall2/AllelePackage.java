@@ -7,7 +7,7 @@ import pgl.infra.dna.allele.AlleleEncoder;
  * A wrapper class of allele pack, which enabled {@link java.util.Set} functionality of allele pack
  * Using array of int, an allele pack stores allele state, relative position of the allele in bin, length of Indel (if it exists), and sequence of the Indel
  */
-class AllelePackage implements Comparable<AllelePackage>{
+public class AllelePackage implements Comparable<AllelePackage>{
     int[] allelePack = null;    // this class is not used to store, but to process data to an allelePack, which is actually an int[].
 
     public AllelePackage (int[] allelePacks) {
