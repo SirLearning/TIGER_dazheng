@@ -432,8 +432,10 @@ class DiscoverVariationF3 extends AppAbstract {
                     if (index == 5) insertionLengthSet.add(length);
                     else deletionLengthSet.add(length);
                     indelSeq = baseS.substring(endIndex, endIndex+length);
+                    // Skip length digits and indel sequence. The loop's i++ then
+                    // moves to the next read. An extra +1 ate that next read.
                     i+=baseSb.length();
-                    i+=length+1;
+                    i+=length;
                 }
                 alleleCount[index]++;
                 vCnt++;

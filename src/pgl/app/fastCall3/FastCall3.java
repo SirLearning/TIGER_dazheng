@@ -22,6 +22,8 @@ import pgl.infra.utils.PArrayUtils;
  *   <li><b>vlib</b>: Views and inspects the variation library in text format</li>
  *   <li><b>clib</b>: Customizes the variation library based on specific positions</li>
  *   <li><b>scan</b>: Performs genotyping of samples using the variation library</li>
+ *   <li><b>scan2</b>: Rebuilds a VCF from existing individual allele-count files</li>
+ *   <li><b>scan3</b>: Merges source taxa allele counts, then filters and genotypes</li>
  * </ul>
  *
  * <p>Key features:
@@ -44,14 +46,14 @@ import pgl.infra.utils.PArrayUtils;
  */
 public class FastCall3 {
 
-    String[] toolNames = {"disc","blib", "scan"};
+    String[] toolNames = {"disc","blib", "scan", "scan2", "scan3"};
 
     String currentTool = null;
 
     //genome block size for variation discovery. The max bin size should be less than 2^23. see {@link AllelePackage}
     static int disBinSize = 5000000;
     //genome block size for genotype scanning
-    static int scanBinSize = 5000000;
+    static int scanBinSize = 2000000;
     // maximum of the number of alternative alleles
     static int maxAltNum = 2;
     static int maxIndelLength = 63;
@@ -88,6 +90,14 @@ public class FastCall3 {
         else if (currentTool.equals("scan")) {
             System.out.println("Genotyping samples based on the variation library...");
             new ScanGenotypeF3(args);
+        }
+        else if (currentTool.equals("scan2")) {
+            System.out.println("Genotyping samples based on the variation library in step 2...");
+            new ScanGenotypeF3(args, "2");
+        }
+        else if (currentTool.equals("scan3")) {
+            System.out.println("Merging source taxa allele counts, then filtering and genotyping...");
+            new ScanGenotypeF3(args, "3");
         }
         else {
             System.out.println("Input errors in setting steps of FastCall 3. Programs stops.");

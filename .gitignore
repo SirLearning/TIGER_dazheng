@@ -22,3 +22,10 @@ hs_err_pid*
 
 # Mac Os
 .DS_Store
+
+# CodeGraph local index (regenerate with: codegraph init -i)
+.codegraph/
+
+# IntelliJ build output
+out/
+test_popdep/
